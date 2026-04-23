@@ -19,7 +19,7 @@ difference, report the 95% CI. If the CI excludes zero → significant.
 This is MORE informative than p-values — it tells the reader effect size
 AND uncertainty in the same statistic.
 
-NOTE: The paired bootstrap is the standard go-to when paired
+LEARNING NOTE: The paired bootstrap is the standard go-to when paired
 observations exist, data is non-normal, and you don't want to assume
 anything about the underlying distribution. Efron & Tibshirani (1993) is
 the canonical reference; use B=10000 resamples for publication-quality CIs.
@@ -43,7 +43,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
+PROJECT_ROOT = Path('/home/claude/probe_project')
 RESULTS_ROOT = PROJECT_ROOT / 'results'
 
 

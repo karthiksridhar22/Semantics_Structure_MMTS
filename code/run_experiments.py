@@ -57,8 +57,10 @@ if str(_HERE) not in sys.path:
 
 from runners.common import (
     RunSpec, RunResult, run_spec, already_done, save_result, now_utc,
-    result_path,
+    result_path, clear_stale_markers, SWEEP_LOG,
 )
+from runners.mmtsflib_runner import MMTSFLIB_ALL_BACKBONES
+from runners.tats_runner import TATS_ALL_BACKBONES
 
 DEFAULT_SEEDS = {
     'mmtsflib': [2021, 2022, 2023],
@@ -74,22 +76,37 @@ ALL_CONDITIONS = [
 ALL_DOMAINS = ['Agriculture', 'Climate', 'Economy', 'Energy', 'Environment',
                'Health', 'Security', 'SocialGood', 'Traffic']
 
+# Default backbone sets per model. Aurora has no backbone axis (its arch
+# is fixed by the pretrained weights), so we emit a single [None] sentinel.
+DEFAULT_BACKBONES = {
+    'aurora':   [None],
+    'tats':     ['iTransformer'],        # paper default
+    'mmtsflib': ['Informer'],            # week_health.sh default
+}
+ALL_BACKBONES = {
+    'aurora':   [None],
+    'tats':     TATS_ALL_BACKBONES,
+    'mmtsflib': MMTSFLIB_ALL_BACKBONES,
+}
+
 
 def build_specs(models, conditions, seeds_per_model, domains, pred_lens,
-                extra_args=None) -> list[RunSpec]:
+                backbones_per_model, extra_args=None) -> list[RunSpec]:
     extra_args = extra_args or {}
     specs = []
     for model in models:
         seeds = seeds_per_model.get(model, DEFAULT_SEEDS[model])
+        bbs = backbones_per_model.get(model, DEFAULT_BACKBONES[model])
         for cond in conditions:
             for seed in seeds:
                 for domain in domains:
                     for h in pred_lens:
-                        specs.append(RunSpec(
-                            model=model, condition=cond, seed=seed,
-                            domain=domain, pred_len=h,
-                            extra_args=dict(extra_args),
-                        ))
+                        for bb in bbs:
+                            specs.append(RunSpec(
+                                model=model, condition=cond, seed=seed,
+                                domain=domain, pred_len=h, backbone=bb,
+                                extra_args=dict(extra_args),
+                            ))
     return specs
 
 
@@ -122,6 +139,14 @@ def main():
     ap.add_argument('--seeds', nargs='+', type=int,
                     help='If set, same seeds used for ALL models (otherwise '
                          'uses DEFAULT_SEEDS per model)')
+    ap.add_argument('--backbones', nargs='+', default=None,
+                    help='Backbone names to run for MM-TSFlib and TaTS '
+                         '(Aurora has no backbone axis). Default: '
+                         'each model\'s paper-default single backbone. '
+                         'Applied to all selected non-Aurora models.')
+    ap.add_argument('--all_backbones', action='store_true',
+                    help='Run every backbone available in each repo. '
+                         'Overrides --backbones.')
     ap.add_argument('--dry_run', action='store_true',
                     help='Print planned grid without executing')
     ap.add_argument('--force', action='store_true',
@@ -134,6 +159,19 @@ def main():
         {m: args.seeds for m in args.models} if args.seeds
         else DEFAULT_SEEDS
     )
+
+    # Resolve per-model backbones
+    if args.all_backbones:
+        backbones_per_model = {m: ALL_BACKBONES[m] for m in args.models}
+    elif args.backbones:
+        # Apply the same user-specified backbones to every non-Aurora model.
+        # Aurora always gets [None].
+        backbones_per_model = {
+            m: ([None] if m == 'aurora' else list(args.backbones))
+            for m in args.models
+        }
+    else:
+        backbones_per_model = {m: DEFAULT_BACKBONES[m] for m in args.models}
 
     # C6 rewrite: its runner uses the C1_original CSVs and sets a CLI flag.
     # To keep the orchestrator simple, we keep the spec as 'C6_unimodal' —
@@ -149,7 +187,8 @@ def main():
     # spec.condition JUST for data path resolution.
 
     specs = build_specs(args.models, args.conditions, seeds_per_model,
-                        args.domains, args.pred_lens)
+                        args.domains, args.pred_lens,
+                        backbones_per_model)
 
     if args.dry_run:
         print(f'Grid size: {len(specs)} cells')
@@ -159,11 +198,20 @@ def main():
             print(f'  ... and {len(specs)-10} more')
         return
 
+    # Before starting, clean up stale in-progress markers from previous
+    # crashed runs. Any cell with a marker is considered "not done" and
+    # will be retried.
+    n_stale = clear_stale_markers()
+    if n_stale:
+        print(f'Cleared {n_stale} stale in-progress markers from previous crashes.')
+    print(f'Sweep log → {SWEEP_LOG} (tail -f to follow live)')
+
     results: list[RunResult] = []
     t_start = time.monotonic()
     for i, spec in enumerate(specs, 1):
         if not args.force and already_done(spec):
             print(f'[{i}/{len(specs)}] SKIP (done): {spec.cell_id()}')
+            sys.stdout.flush()
             # Load existing result for summary.
             import json
             try:
@@ -179,6 +227,7 @@ def main():
 
         # Run.
         print(f'[{i}/{len(specs)}] RUN: {spec.cell_id()}')
+        sys.stdout.flush()
         t_cell = time.monotonic()
         try:
             result = run_spec(spec)
@@ -192,6 +241,7 @@ def main():
         status = 'OK' if result.success else 'FAIL'
         print(f'    -> {status} ({result.wall_time_seconds:.1f}s)'
               + (f' MSE={result.mse:.4f} MAE={result.mae:.4f}' if result.success else f' error={result.error[:80]}'))
+        sys.stdout.flush()   # nohup-friendliness: flush every cell
 
         if not result.success and args.stop_on_error:
             print('--stop_on_error set; aborting sweep.')

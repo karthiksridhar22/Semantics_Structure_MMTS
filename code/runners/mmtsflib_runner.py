@@ -30,16 +30,29 @@ from runners.common import (
     RunSpec, RunResult, REPOS,
     resolve_data_path, parse_metrics_from_log,
     run_subprocess, tail, now_utc,
+    mark_running, full_log_path, collect_provenance,
 )
 
 MMTSFLIB_REPO = REPOS / 'MM-TSFlib'
 
-DEFAULT_BACKBONE = 'Informer'   # choose one; week_health.sh uses this
+# All backbones available in MM-TSFlib/exp/exp_basic.py.
+# For the paper's main table we'll run all of them; each cell's backbone is
+# controlled by spec.extra_args['backbone']. If absent, we default to
+# Informer (week_health.sh's choice).
+MMTSFLIB_ALL_BACKBONES = [
+    'Informer', 'Autoformer', 'Transformer', 'Nonstationary_Transformer',
+    'DLinear', 'FEDformer', 'TimesNet', 'LightTS', 'Reformer', 'ETSformer',
+    'PatchTST', 'Pyraformer', 'MICN', 'Crossformer', 'FiLM', 'iTransformer',
+    'Koopa', 'TiDE', 'FreTS', 'TimeMixer', 'TSMixer', 'SegRNN',
+]
+DEFAULT_BACKBONE = 'Informer'
 
 
 def run_mmtsflib(spec: RunSpec) -> RunResult:
+    mark_running(spec)
+    prov = collect_provenance(spec.model)
     result = RunResult(spec=spec, success=False, started_at_utc=now_utc(),
-                       working_dir=str(MMTSFLIB_REPO))
+                       working_dir=str(MMTSFLIB_REPO), **prov)
     t0 = time.monotonic()
 
     root_path, data_file = resolve_data_path(spec)
@@ -47,7 +60,7 @@ def run_mmtsflib(spec: RunSpec) -> RunResult:
         result.error = f'perturbed CSV not found: {root_path / data_file}'
         return result
 
-    backbone = spec.extra_args.get('backbone', DEFAULT_BACKBONE)
+    backbone = spec.backbone or spec.extra_args.get('backbone', DEFAULT_BACKBONE)
     text_len = spec.extra_args.get('text_len', 4)              # reads Final_Search_4
     llm_model = spec.extra_args.get('llm_model', 'BERT')
     train_epochs = spec.extra_args.get('train_epochs', 10)
@@ -93,6 +106,11 @@ def run_mmtsflib(spec: RunSpec) -> RunResult:
     )
     result.stdout_tail = tail(stdout, 60)
     result.stderr_tail = tail(stderr, 60)
+
+    log_p = full_log_path(spec)
+    log_p.parent.mkdir(parents=True, exist_ok=True)
+    log_p.write_text(f'=== STDOUT ===\n{stdout}\n\n=== STDERR ===\n{stderr}\n')
+    result.stdout_log_path = str(log_p)
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

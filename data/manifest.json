@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-04-23T11:00:26.617972+00:00",
+  "generated_at_utc": "2026-04-23T14:06:34.248040+00:00",
   "project_root": "/home/karthik/Semantics_Structure_MMTS",
-  "total_files": 198,
-  "clean_files": 198,
+  "total_files": 162,
+  "clean_files": 162,
   "seeds": {
     "mmtsflib": [
       2021,
@@ -726,10 +726,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Agriculture",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Algriculture/US_RetailBroilerComposite_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Algriculture/US_RetailBroilerComposite_Month.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Algriculture/US_RetailBroilerComposite_Month.csv",
       "n_rows": 496,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -741,10 +741,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Climate",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Climate/US_precipitation_month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Climate/US_precipitation_month.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Climate/US_precipitation_month.csv",
       "n_rows": 496,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -756,10 +756,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Economy",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Economy/US_TradeBalance_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Economy/US_TradeBalance_Month.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Economy/US_TradeBalance_Month.csv",
       "n_rows": 423,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -771,10 +771,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Energy",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Energy/US_GasolinePrice_Week.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Energy/US_GasolinePrice_Week.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Energy/US_GasolinePrice_Week.csv",
       "n_rows": 1479,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -786,10 +786,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Environment",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Environment/NewYork_AQI_Day.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Environment/NewYork_AQI_Day.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Environment/NewYork_AQI_Day.csv",
       "n_rows": 11102,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -801,10 +801,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Health",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Public_Health/US_FLURATIO_Week.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Public_Health/US_FLURATIO_Week.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Public_Health/US_FLURATIO_Week.csv",
       "n_rows": 1389,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -816,10 +816,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Security",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Security/US_FEMAGrant_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Security/US_FEMAGrant_Month.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Security/US_FEMAGrant_Month.csv",
       "n_rows": 297,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -831,10 +831,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "n_rows": 900,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -846,280 +846,10 @@
     {
       "repo": "mmtsflib",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Traffic",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Traffic/US_VMT_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2021/Traffic/US_VMT_Month.csv",
-      "n_rows": 531,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Agriculture",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Algriculture/US_RetailBroilerComposite_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Algriculture/US_RetailBroilerComposite_Month.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Climate",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Climate/US_precipitation_month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Climate/US_precipitation_month.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Economy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Economy/US_TradeBalance_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Economy/US_TradeBalance_Month.csv",
-      "n_rows": 423,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Energy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Energy/US_GasolinePrice_Week.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Energy/US_GasolinePrice_Week.csv",
-      "n_rows": 1479,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Environment",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Environment/NewYork_AQI_Day.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Environment/NewYork_AQI_Day.csv",
-      "n_rows": 11102,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Health",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Public_Health/US_FLURATIO_Week.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Public_Health/US_FLURATIO_Week.csv",
-      "n_rows": 1389,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Security",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Security/US_FEMAGrant_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Security/US_FEMAGrant_Month.csv",
-      "n_rows": 297,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "SocialGood",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Traffic",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Traffic/US_VMT_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2022/Traffic/US_VMT_Month.csv",
-      "n_rows": 531,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Agriculture",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Algriculture/US_RetailBroilerComposite_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Algriculture/US_RetailBroilerComposite_Month.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Climate",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Climate/US_precipitation_month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Climate/US_precipitation_month.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Economy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Economy/US_TradeBalance_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Economy/US_TradeBalance_Month.csv",
-      "n_rows": 423,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Energy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Energy/US_GasolinePrice_Week.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Energy/US_GasolinePrice_Week.csv",
-      "n_rows": 1479,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Environment",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Environment/NewYork_AQI_Day.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Environment/NewYork_AQI_Day.csv",
-      "n_rows": 11102,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Health",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Public_Health/US_FLURATIO_Week.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Public_Health/US_FLURATIO_Week.csv",
-      "n_rows": 1389,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Security",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Security/US_FEMAGrant_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Security/US_FEMAGrant_Month.csv",
-      "n_rows": 297,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "SocialGood",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
-      "text_cols_perturbed": [
-        "Final_Search_4"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "mmtsflib",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Traffic",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/Traffic/US_VMT_Month.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed2023/Traffic/US_VMT_Month.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/Traffic/US_VMT_Month.csv",
       "n_rows": 531,
       "text_cols_perturbed": [
         "Final_Search_4"
@@ -2265,10 +1995,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Agriculture",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Agriculture.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Agriculture.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Agriculture.csv",
       "n_rows": 496,
       "text_cols_perturbed": [
         "fact"
@@ -2280,10 +2010,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Climate",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Climate.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Climate.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Climate.csv",
       "n_rows": 496,
       "text_cols_perturbed": [
         "fact"
@@ -2295,10 +2025,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Economy",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Economy.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Economy.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Economy.csv",
       "n_rows": 423,
       "text_cols_perturbed": [
         "fact"
@@ -2310,10 +2040,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Energy",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Energy.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Energy.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Energy.csv",
       "n_rows": 1479,
       "text_cols_perturbed": [
         "fact"
@@ -2325,10 +2055,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Environment",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Environment.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Environment.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Environment.csv",
       "n_rows": 15248,
       "text_cols_perturbed": [
         "fact"
@@ -2340,10 +2070,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Health",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Health.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Health.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Health.csv",
       "n_rows": 1389,
       "text_cols_perturbed": [
         "fact"
@@ -2355,10 +2085,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Security",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Security.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Security.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Security.csv",
       "n_rows": 297,
       "text_cols_perturbed": [
         "fact"
@@ -2370,10 +2100,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/SocialGood.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/SocialGood.csv",
       "n_rows": 900,
       "text_cols_perturbed": [
         "fact"
@@ -2385,280 +2115,10 @@
     {
       "repo": "tats",
       "condition": "C4_crossdomain",
-      "seed": 2021,
+      "seed": 0,
       "domain": "Traffic",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Traffic.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2021/Traffic.csv",
-      "n_rows": 531,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Agriculture",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Agriculture.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Agriculture.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Climate",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Climate.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Climate.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Economy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Economy.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Economy.csv",
-      "n_rows": 423,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Energy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Energy.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Energy.csv",
-      "n_rows": 1479,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Environment",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Environment.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Environment.csv",
-      "n_rows": 15248,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Health",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Health.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Health.csv",
-      "n_rows": 1389,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Security",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Security.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Security.csv",
-      "n_rows": 297,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "SocialGood",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/SocialGood.csv",
-      "n_rows": 900,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2022,
-      "domain": "Traffic",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Traffic.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2022/Traffic.csv",
-      "n_rows": 531,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Agriculture",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Agriculture.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Agriculture.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Climate",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Climate.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Climate.csv",
-      "n_rows": 496,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Economy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Economy.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Economy.csv",
-      "n_rows": 423,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Energy",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Energy.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Energy.csv",
-      "n_rows": 1479,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Environment",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Environment.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Environment.csv",
-      "n_rows": 15248,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Health",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Health.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Health.csv",
-      "n_rows": 1389,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Security",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Security.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Security.csv",
-      "n_rows": 297,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "SocialGood",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/SocialGood.csv",
-      "n_rows": 900,
-      "text_cols_perturbed": [
-        "fact"
-      ],
-      "numeric_cols_zeroed": [],
-      "n_violations": 0,
-      "violations": []
-    },
-    {
-      "repo": "tats",
-      "condition": "C4_crossdomain",
-      "seed": 2023,
-      "domain": "Traffic",
-      "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/Traffic.csv",
-      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed2023/Traffic.csv",
+      "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/Traffic.csv",
       "n_rows": 531,
       "text_cols_perturbed": [
         "fact"

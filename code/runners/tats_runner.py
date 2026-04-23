@@ -30,18 +30,27 @@ from runners.common import (
     RunSpec, RunResult, REPOS,
     resolve_data_path, parse_metrics_from_log,
     run_subprocess, tail, now_utc,
+    mark_running, full_log_path, collect_provenance,
 )
 
 TATS_REPO = REPOS / 'TaTS'
 
-# Backbone default: iTransformer (matches TaTS's scripts/main_forecast.sh).
+# All backbones available in TaTS/models/.
+# Each cell's backbone is controlled by spec.extra_args['backbone']. Default
+# = iTransformer (main_forecast.sh's choice).
+TATS_ALL_BACKBONES = [
+    'iTransformer', 'Autoformer', 'Transformer', 'DLinear',
+    'FEDformer', 'Informer', 'PatchTST', 'Crossformer', 'FiLM',
+]
 DEFAULT_BACKBONE = 'iTransformer'
 
 
 def run_tats(spec: RunSpec) -> RunResult:
     """Invoke TaTS on the specified cell."""
+    mark_running(spec)
+    prov = collect_provenance(spec.model)
     result = RunResult(spec=spec, success=False, started_at_utc=now_utc(),
-                       working_dir=str(TATS_REPO))
+                       working_dir=str(TATS_REPO), **prov)
     t0 = time.monotonic()
 
     root_path, data_file = resolve_data_path(spec)
@@ -49,7 +58,7 @@ def run_tats(spec: RunSpec) -> RunResult:
         result.error = f'perturbed CSV not found: {root_path / data_file}'
         return result
 
-    backbone = spec.extra_args.get('backbone', DEFAULT_BACKBONE)
+    backbone = spec.backbone or spec.extra_args.get('backbone', DEFAULT_BACKBONE)
     train_epochs = spec.extra_args.get('train_epochs', 5)
     patience = spec.extra_args.get('patience', 5)
     llm_model = spec.extra_args.get('llm_model', 'GPT2')
@@ -101,6 +110,11 @@ def run_tats(spec: RunSpec) -> RunResult:
     )
     result.stdout_tail = tail(stdout, 60)
     result.stderr_tail = tail(stderr, 60)
+
+    log_p = full_log_path(spec)
+    log_p.parent.mkdir(parents=True, exist_ok=True)
+    log_p.write_text(f'=== STDOUT ===\n{stdout}\n\n=== STDERR ===\n{stderr}\n')
+    result.stdout_log_path = str(log_p)
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

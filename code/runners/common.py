@@ -15,6 +15,13 @@ Why this matters: when we later aggregate 378+ runs into tables and
 plots, they're all the same shape — makes paired bootstrap / stats
 trivial instead of bespoke-per-model.
 
+TEACHING NOTE
+-------------
+This design follows the "strong typing, weak dispatch" pattern common
+in ML research infra. All the variability lives in the RunSpec
+(what we're running), not in the runner's call signature. This makes
+it easy to add new conditions, seeds, or even new models later without
+changing the orchestrator.
 """
 
 from __future__ import annotations
@@ -47,11 +54,16 @@ class RunSpec:
     # Model-specific knobs — None means "use the model's paper-default".
     seq_len: Optional[int] = None
     label_len: Optional[int] = None
+    # Backbone: for MM-TSFlib/TaTS we pick one from their model registry;
+    # Aurora has no backbone axis (the pretrained architecture is fixed).
+    # None means "use the runner's DEFAULT_BACKBONE".
+    backbone: Optional[str] = None
     extra_args: dict = field(default_factory=dict)
 
     def cell_id(self) -> str:
         """Stable, human-readable identifier used for result filenames."""
-        return (f'{self.model}__{self.condition}__seed{self.seed}__'
+        bb = f'_{self.backbone}' if self.backbone else ''
+        return (f'{self.model}{bb}__{self.condition}__seed{self.seed}__'
                 f'{self.domain}__h{self.pred_len}')
 
 
@@ -72,6 +84,14 @@ class RunResult:
     stdout_tail: str = ''                  # last N lines of model stdout
     stderr_tail: str = ''
     error: str = ''                        # error message on failure
+    # Crash-resilience / provenance fields
+    hostname: str = ''
+    probe_repo_git_sha: str = ''
+    model_repo_git_sha: str = ''
+    python_version: str = ''
+    torch_version: str = ''
+    cuda_visible_devices: str = ''
+    stdout_log_path: str = ''              # full log on disk (not just tail)
     # Optional extras the runner may fill in
     extra: dict = field(default_factory=dict)
 
@@ -105,7 +125,8 @@ RESULTS_ROOT = PROJECT_ROOT / 'results'
 
 def result_path(spec: RunSpec) -> Path:
     """Where a RunResult JSON gets saved for this spec."""
-    return (RESULTS_ROOT / spec.model / spec.condition
+    bb = spec.backbone or 'default'
+    return (RESULTS_ROOT / spec.model / bb / spec.condition
             / f'seed{spec.seed}' / f'{spec.domain}_h{spec.pred_len}.json')
 
 
@@ -144,7 +165,8 @@ DOMAIN_FILE_MAP = {
 # stored on disk under a sentinel seed=0 path. The runner's RunSpec.seed
 # still controls the MODEL's RNG (weight init, dropout, etc); only the CSV
 # location is deduplicated.
-_SEEDED_DATA_CONDITIONS = {'C3_shuffled', 'C4_crossdomain'}
+# (Only C3 is seed-dependent after we switched C4 to date-aligned.)
+_SEEDED_DATA_CONDITIONS = {'C3_shuffled'}
 
 
 def resolve_data_path(spec: RunSpec) -> tuple[Path, str]:
@@ -273,25 +295,85 @@ def tail(text: str, n_lines: int = 40) -> str:
 
 
 # =============================================================================
-#  Result persistence & resume
+#  Result persistence & resume — crash-resilient
 # =============================================================================
 
-def save_result(result: RunResult) -> Path:
-    """Write RunResult as JSON. Returns the path."""
-    path = result_path(result.spec)
+LOGS_ROOT = PROJECT_ROOT / 'logs'     # per-cell full stdout/stderr
+SWEEP_LOG = PROJECT_ROOT / 'sweep_log.jsonl'   # append-only global log
+
+
+def running_marker_path(spec: 'RunSpec') -> Path:
+    """Path to a 'this cell is in progress' marker file."""
+    return result_path(spec).with_suffix('.running')
+
+
+def full_log_path(spec: 'RunSpec') -> Path:
+    """Path to the full stdout/stderr log for a cell."""
+    bb = spec.backbone or 'default'
+    return (LOGS_ROOT / spec.model / bb / spec.condition
+            / f'seed{spec.seed}' / f'{spec.domain}_h{spec.pred_len}.log')
+
+
+def _atomic_write(path: Path, content: str) -> None:
+    """Write content to path such that readers NEVER see a half-written file.
+    Implementation: write to path.tmp, fsync, rename (rename is atomic on
+    POSIX). If we crash mid-write, the target path is unchanged."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(result.to_json())
+    tmp = path.with_suffix(path.suffix + '.tmp')
+    with open(tmp, 'w') as f:
+        f.write(content)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(str(tmp), str(path))
+
+
+def save_result(result: 'RunResult') -> Path:
+    """Atomically write RunResult as JSON. Also remove the in-progress
+    marker and append to the sweep log."""
+    path = result_path(result.spec)
+    _atomic_write(path, result.to_json())
+
+    # Clean up the in-progress marker
+    marker = running_marker_path(result.spec)
+    if marker.exists():
+        marker.unlink()
+
+    # Append a one-line summary to the global sweep log
+    try:
+        LOGS_ROOT.mkdir(parents=True, exist_ok=True)
+        with open(SWEEP_LOG, 'a') as f:
+            summary = {
+                'ts': now_utc(),
+                'cell_id': result.spec.cell_id(),
+                'success': result.success,
+                'mse': result.mse,
+                'mae': result.mae,
+                'wall_s': round(result.wall_time_seconds, 1),
+                'error': (result.error[:150] if result.error else ''),
+            }
+            f.write(json.dumps(summary) + '\n')
+    except OSError:
+        pass   # never let logging fail a run
+
     return path
 
 
-def already_done(spec: RunSpec) -> bool:
-    """True if a successful result already exists for this spec.
+def mark_running(spec: 'RunSpec') -> None:
+    """Write an in-progress marker file. If we crash during the run, this
+    marker survives and tells the resume logic that the cell is stale
+    and should be re-run."""
+    marker = running_marker_path(spec)
+    _atomic_write(marker, json.dumps({'started_at_utc': now_utc(),
+                                       'pid': os.getpid()}))
 
-    Used by the orchestrator to skip re-runs. If you want to force
-    re-run, delete the specific JSON file (or use the --force flag
-    in the orchestrator).
-    """
+
+def already_done(spec: 'RunSpec') -> bool:
+    """True if a successful result already exists for this spec AND no
+    in-progress marker is present (marker means previous attempt crashed)."""
     p = result_path(spec)
+    marker = running_marker_path(spec)
+    if marker.exists():
+        return False   # previous attempt crashed; re-run
     if not p.exists():
         return False
     try:
@@ -299,6 +381,57 @@ def already_done(spec: RunSpec) -> bool:
         return bool(data.get('success'))
     except (json.JSONDecodeError, OSError):
         return False
+
+
+def clear_stale_markers() -> int:
+    """At sweep startup, clean up any markers from previous crashed runs.
+    Returns the count cleared."""
+    count = 0
+    if not RESULTS_ROOT.exists():
+        return 0
+    for m in RESULTS_ROOT.rglob('*.running'):
+        m.unlink()
+        count += 1
+    return count
+
+
+# =============================================================================
+#  Provenance helpers
+# =============================================================================
+
+def _safe_git_sha(repo_dir: Path) -> str:
+    """Return short git SHA of a repo, or 'nogit' if unavailable."""
+    try:
+        out = subprocess.check_output(
+            ['git', 'rev-parse', '--short=12', 'HEAD'],
+            cwd=str(repo_dir), stderr=subprocess.DEVNULL, text=True,
+        )
+        return out.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return 'nogit'
+
+
+def collect_provenance(model: str) -> dict:
+    """Gather git SHAs, python/torch versions, hostname for this run."""
+    import platform, socket
+    repo_map = {
+        'mmtsflib': REPOS / 'MM-TSFlib',
+        'tats':     REPOS / 'TaTS',
+        'aurora':   REPOS / 'Aurora',
+    }
+    try:
+        import torch
+        torch_v = torch.__version__
+    except ImportError:
+        torch_v = 'unavailable'
+    return {
+        'hostname': socket.gethostname(),
+        'probe_repo_git_sha': _safe_git_sha(PROJECT_ROOT),
+        'model_repo_git_sha': _safe_git_sha(repo_map.get(model, PROJECT_ROOT)),
+        'python_version': platform.python_version(),
+        'torch_version': torch_v,
+        'cuda_visible_devices': os.environ.get('CUDA_VISIBLE_DEVICES', ''),
+    }
 
 
 # =============================================================================

@@ -170,11 +170,105 @@ python3 code/run_experiments.py \
     --domains Economy --pred_lens 8 --seeds 2021
 ```
 
-Output: two JSONs at `results/aurora/{C1_original,C6_unimodal}/seed2021/Economy_h8.json` with non-null `mse`/`mae`. Takes a few minutes.
+Output: two JSONs at `results/aurora/default/{C1_original,C6_unimodal}/seed2021/Economy_h8.json` with non-null `mse`/`mae`. Takes a few minutes.
 
-### Step 4: Full sweep
+### Step 4: Full sweep with multiple backbones (nohup-safe)
 
-Staged plan in `notes/`.
+Each `--model` must run in its own conda env. Orchestrator is resume-safe: cells with a successful result are skipped; cells with an `.running` marker from a crashed run are automatically retried.
+
+Start one nohup per model (or run sequentially):
+
+```bash
+# TaTS — one default backbone (iTransformer)
+conda activate tats
+nohup python3 -u code/run_experiments.py \
+    --models tats \
+    --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
+                 C5_constant C6_unimodal C7_null C8_oracle \
+    --domains Agriculture Climate Economy Energy Environment \
+              Health Security SocialGood Traffic \
+    --pred_lens 48 --seeds 2021 2022 2023 \
+    > nohup_tats.log 2>&1 &
+echo "TaTS PID: $!"
+```
+
+**To run 3 backbones per non-Aurora model** (recommended for backbone-deviation analysis without 22× compute on MM-TSFlib):
+
+```bash
+# TaTS with 3 representative backbones
+nohup python3 -u code/run_experiments.py \
+    --models tats \
+    --backbones iTransformer DLinear Autoformer \
+    --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
+                 C5_constant C6_unimodal C7_null C8_oracle \
+    --domains Agriculture Climate Economy Energy Environment \
+              Health Security SocialGood Traffic \
+    --pred_lens 48 --seeds 2021 2022 2023 \
+    > nohup_tats.log 2>&1 &
+```
+
+Or `--all_backbones` to run every backbone in the repo (9 for TaTS, 22 for MM-TSFlib — expensive for MM-TSFlib).
+
+Same pattern for MM-TSFlib and Aurora (with their respective conda envs). **`python3 -u`** is important: disables output buffering, so `tail -f nohup_tats.log` actually shows progress. Our runner also calls `sys.stdout.flush()` after each cell for the same reason.
+
+**Tracking progress during a sweep:**
+
+```bash
+tail -f nohup_tats.log                  # live log
+tail -f sweep_log.jsonl                 # one line per completed cell
+ls results/tats/iTransformer/C1_original/seed2021/ | wc -l   # count completed
+find results/ -name "*.running" | wc -l                      # count in-progress
+```
+
+**If the instance dies mid-sweep:**
+
+```bash
+# On the new instance — the orchestrator handles resume automatically.
+# .running markers from the old run are cleared on startup.
+# Successful results are skipped.
+conda activate tats
+nohup python3 -u code/run_experiments.py --models tats --all_backbones ... \
+    >> nohup_tats.log 2>&1 &
+# Grep for how many were skipped to confirm resume worked:
+# grep "SKIP (done)" nohup_tats.log | wc -l
+```
+
+**Per-cell full logs** are saved to `logs/<model>/<backbone>/<condition>/seed{s}/<domain>_h<h>.log` so you don't have to re-run failed cells to debug.
+
+### Step 5 (optional): Aurora diagnostic probes
+
+Standalone, non-intrusive. Runs after the main sweep — doesn't touch any file in `results/`.
+
+```bash
+conda activate aurora
+export AURORA_WEIGHTS=$(pwd)/weights/aurora
+
+# Step 5a: VERIFY that hooks don't change model outputs (one-time check)
+python3 code/aurora_probes.py --validate_invariance
+# Expect: "*** INVARIANCE CONFIRMED: hooks do not change outputs ***"
+
+# Step 5b: Run the three probes on selected cells
+python3 code/aurora_probes.py \
+    --conditions C1_original C3_shuffled C6_unimodal C8_oracle \
+    --domains Economy Health Energy \
+    --seeds 2021 --pred_lens 8
+# Writes probes/aurora/<cond>/seed<s>/<domain>_h<h>.json
+```
+
+The three probes and what they tell you:
+
+**Probe A — gradient norm at text-encoder input embeddings (`gradnorm_mean`).**
+Measures whether gradients flow into text content. If `gradnorm(C1) ≈ gradnorm(C3)` with C3's text being random-shuffled, the model is propagating gradients through the text path regardless of content — evidence that the text branch is trained but content doesn't differentiate behavior.
+
+**Probe B — cross-attention entropy (`attn_entropy_rel_mean`).**
+Measures how peaked Aurora's cross-attention over text tokens is. Values close to 1.0 = uniform (attending everywhere equally → no text selectivity). Values close to 0 = highly peaked on specific tokens. Compare C1 vs C3: if entropies match, attention isn't content-differentiated.
+
+**Probe C — output divergence between with-text and without-text (`divergence_mean_sq`).**
+Model-agnostic sanity check. Small = text changes the prediction little = text is being ignored downstream.
+
+**Reversibility:** probes attach forward/backward hooks in-process, run, and detach. Nothing persistent is written into the repos. If you want to skip probes entirely for a given run, use `--no_gradnorm` / `--no_attention` / `--no_divergence` flags.
+
+**Why Aurora-only?** Aurora has an explicit text encoder + cross-attention — clean hook points. MM-TSFlib's fusion is a weighted sum (no cross-attention); TaTS precomputes text embeddings at data-load (no live text encoder during training). Aurora is also where your main results show the smallest multimodal/unimodal gap — probes here are the most informative for your paper's narrative.
 
 ## Analyze
 
@@ -186,12 +280,25 @@ Writes `summaries/per_cell_mse.csv`, `summaries/main_mse.csv`, `summaries/pairwi
 
 Paired-bootstrap: `mean_diff` is MSE(test) − MSE(C1) averaged across pairs. `ci_lo > 0` → test condition made things worse. `rel_diff` = effect size relative to C1.
 
+## On `features=S` vs `features=M` (why we use S for all three)
+
+This flag controls whether the TS backbone sees only `OT` (univariate, S) or also other numerical columns like `Exports`, `Imports` (multivariate, M).
+
+- **Aurora**: reference script uses `features=S` (univariate Time-MMD setup).
+- **TaTS**: force-overrides to `features=S` on line 161 of `run.py` regardless of user input — the paper is univariate.
+- **MM-TSFlib**: reference script says `--features M`, but we verified **all 9 domains crash** under `features='M'` with the shipped preprocessed data (`StandardScaler.fit()` tries to ingest string columns like `start_date`, `Month`, `REGION`, etc., which aren't filtered out before the scaler). Either this code path was never tested, or the published numbers used a patched private variant not in their public release.
+
+**Our choice:** `features='S'` for all three. It's what two-of-three do natively, it's what's actually runnable for MM-TSFlib, and it's the standard univariate Time-MMD setup described in the paper's main Table 1.
+
+**Reviewer defence:** state plainly in the paper that MM-TSFlib's public `features=M` code path is non-functional on the shipped preprocessed data; we use `S` for fair cross-model comparison. Reference file:line in MM-TSFlib and include an appendix entry showing the traceback.
+
 ## Design decisions log
 
-- **`features=S`** for MM-TSFlib. Shipped `M` crashes on string columns.
+- **`features=S`** for all three models (see above section).
 - **C8 oracle included** — positive control; without it, null C3/C4 results are unfalsifiable.
 - **Zero `prior_history_avg` under C2/C5/C7**, not C3/C4/C6/C8.
-- **Unified seeds {2021, 2022, 2023}**.
+- **C4 is date-aligned**, not tile-shuffled. For each target row, we take the paired domain's latest fact with date ≤ target row's date. Target rows before the paired domain's start date get `''` (empty fallback). This avoids repetition artifacts.
+- **Unified seeds {2021, 2022, 2023}** — only C3 actually uses them.
 - **Primary backbones**: Informer for MM-TSFlib, iTransformer for TaTS.
 
 ## Known confounds (flag in paper)

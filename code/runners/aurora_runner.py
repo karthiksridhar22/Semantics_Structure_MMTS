@@ -29,6 +29,7 @@ from runners.common import (
     RunSpec, RunResult, REPOS, PROJECT_ROOT,
     resolve_data_path, parse_metrics_from_log,
     run_subprocess, tail, now_utc,
+    mark_running, full_log_path, collect_provenance,
 )
 
 AURORA_REPO = REPOS / 'Aurora' / 'TimeMMD'
@@ -53,8 +54,10 @@ AURORA_DEFAULTS = {
 
 def run_aurora(spec: RunSpec) -> RunResult:
     """Invoke Aurora on the specified cell. Returns a RunResult."""
+    mark_running(spec)   # drop marker; save_result will remove it
+    prov = collect_provenance(spec.model)
     result = RunResult(spec=spec, success=False, started_at_utc=now_utc(),
-                       working_dir=str(AURORA_REPO))
+                       working_dir=str(AURORA_REPO), **prov)
     t0 = time.monotonic()
 
     # Sanity: pretrained weights available?
@@ -108,6 +111,14 @@ def run_aurora(spec: RunSpec) -> RunResult:
     )
     result.stdout_tail = tail(stdout, 60)
     result.stderr_tail = tail(stderr, 60)
+
+    # Save full stdout+stderr to disk so failed-cell debugging doesn't
+    # require re-running (which could take hours). Atomic write so a crash
+    # during logging doesn't corrupt the file.
+    log_p = full_log_path(spec)
+    log_p.parent.mkdir(parents=True, exist_ok=True)
+    log_p.write_text(f'=== STDOUT ===\n{stdout}\n\n=== STDERR ===\n{stderr}\n')
+    result.stdout_log_path = str(log_p)
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

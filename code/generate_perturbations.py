@@ -154,8 +154,12 @@ CONDITIONS = ['C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
 # C6 absent by design — triggered via CLI at run-time.
 
 # Conditions whose CSV content depends on the seed (i.e. use an RNG).
-# Other conditions produce byte-identical CSVs across seeds — we write them once.
-SEEDED_CONDITIONS = {'C3_shuffled', 'C4_crossdomain'}
+# Other conditions produce byte-identical CSVs across seeds — we write them
+# once under seed0/.
+# NOTE: C4 was originally seed-dependent (random shuffle after tile-cycling)
+# but we switched to deterministic date-based alignment to avoid the
+# "same text appearing many times" artifact that the tile approach caused.
+SEEDED_CONDITIONS = {'C3_shuffled'}
 
 C5_CONSTANT_STR = 'Time series data point.'
 C7_NULL_STR = '0'
@@ -245,32 +249,60 @@ def c3_shuffled(df: pd.DataFrame, text_cols, seed, **_) -> pd.DataFrame:
 
 def c4_crossdomain(df: pd.DataFrame, paired_df: pd.DataFrame, text_cols,
                    seed, **_) -> pd.DataFrame:
-    """C4: replace text with paired domain's text, cycled to length, then shuffled.
+    """C4: replace text with paired domain's text — NO repetition.
 
-    The 'cycle' step is deterministic: if paired domain has fewer rows than
-    target, we tile (repeat) to reach target length; if it has more, we
-    truncate. No randomness here — this step just equalizes lengths.
+    STRATEGY (per user preference to avoid misleading repeat-signals):
 
-    The shuffle AFTER cycling is the seed-dependent step. Without shuffling,
-    tiled positions would be correlated with the target's row index (e.g. if
-    paired domain has exactly half our rows, row N and row N+half would have
-    identical tiled text), which could create spurious artifacts.
+    1. Try to align by date: for each row in the target, find the paired
+       domain's text with the closest date ≤ this row's date. If no such
+       text exists (target date is before paired domain starts), use NaN
+       → will be read as '' by the patched loader (which is equivalent to
+       C2's behavior on that row — a principled fallback).
 
-    For Environment (self-paired), behavior equals C3.
+    2. If paired domain has fewer unique dates than the target, many
+       target rows will end up with the same paired-date text. That's
+       fine — it corresponds to the real temporal relationship between
+       the two domains (e.g. monthly economy news for weekly health
+       observations: 4 health rows share the same economy-month fact).
+
+    3. If paired domain has MORE rows than target, we effectively
+       downsample by "closest-past-date" matching — no information
+       leaked forward, no cycling.
+
+    4. NO shuffle. The `seed` arg is kept for API compatibility (with C3)
+       but unused in the date-aligned variant. This makes C4 deterministic
+       for a given (target, paired) pair — across all seeds.
+
+    For Environment (self-paired), a cross-domain condition doesn't make
+    sense. We fall back to C3 (within-domain shuffle) with the seed.
     """
     out = df.copy()
-    rng = np.random.default_rng(seed)
-    n = len(out)
+    # Self-pair fallback → behave like C3
+    if paired_df is df:
+        return c3_shuffled(df, text_cols=text_cols, seed=seed)
+
+    # Compute the date-aligned mapping ONCE (reuse across text_cols)
+    target_dates = pd.to_datetime(out['date']).reset_index(drop=True)
+    paired_dates = pd.to_datetime(paired_df['date']).reset_index(drop=True)
+    # For each target date, find the index in paired whose date is the
+    # greatest date <= target_date. If no such date exists, map to -1.
+    sorted_paired_idx = paired_dates.sort_values().index.to_numpy()
+    sorted_paired_dates = paired_dates.loc[sorted_paired_idx].values
+    target_arr = target_dates.values
+    # searchsorted 'right' returns the insert position; pos-1 gives the
+    # rightmost element <= target
+    pos = np.searchsorted(sorted_paired_dates, target_arr, side='right') - 1
+    # Map back to the paired df's original row index
+    mapped_idx = np.where(pos >= 0, sorted_paired_idx[np.clip(pos, 0, None)], -1)
+
     for c in text_cols:
         if c not in out.columns or c not in paired_df.columns:
             continue
         src = paired_df[c].to_numpy()
-        # Tile and truncate: repeat src until we have at least n items.
-        reps = (n + len(src) - 1) // len(src)
-        tiled = np.tile(src, reps)[:n]
-        # Shuffle so that there's no positional bias from tiling.
-        perm = rng.permutation(n)
-        out[c] = tiled[perm]
+        new_vals = np.empty(len(out), dtype=object)
+        for i, j in enumerate(mapped_idx):
+            new_vals[i] = src[j] if j >= 0 else ''   # '' matches C2 fallback
+        out[c] = new_vals
     return out
 
 
