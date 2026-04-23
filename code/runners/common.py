@@ -6,22 +6,44 @@ Shared infrastructure used by all three model runners.
 
 DESIGN
 ------
-A single run is fully described by a `RunSpec`. Every runner takes a
-RunSpec and returns a `RunResult`. Everything else (data staging, CLI
-construction, metric parsing, result logging) is wrapped around those
-two types.
+A single experimental run is fully described by a `RunSpec`:
+    (model, backbone, condition, seed, domain, pred_len, seq_len, label_len)
 
-Why this matters: when we later aggregate 378+ runs into tables and
-plots, they're all the same shape — makes paired bootstrap / stats
-trivial instead of bespoke-per-model.
+Every runner takes a RunSpec and returns a `RunResult` containing metrics,
+provenance, wall time, and optional extras (e.g. trained-checkpoint path).
 
-TEACHING NOTE
+Everything else — data staging, CLI construction, metric parsing, result
+logging, crash-resilient checkpointing — is wrapped around those two types.
+
+RESULT LAYOUT
 -------------
-This design follows the "strong typing, weak dispatch" pattern common
-in ML research infra. All the variability lives in the RunSpec
-(what we're running), not in the runner's call signature. This makes
-it easy to add new conditions, seeds, or even new models later without
-changing the orchestrator.
+results/<model>/<backbone_or_default>/<condition>/seed<s>/<domain>_h<pred_len>.json
+
+The `backbone_or_default` subfolder is 'default' for Aurora (which has no
+backbone axis since it's a pretrained fixed architecture), and the backbone
+name for TaTS / MM-TSFlib.
+
+CRASH-RESILIENT WRITES
+----------------------
+* Atomic saves: content written to `.tmp`, fsync'd, renamed. A crash
+  mid-write never leaves a corrupt JSON.
+* `.running` marker files created at run start, removed on successful
+  save. On startup, `clear_stale_markers()` removes markers from previous
+  crashed runs so those cells get retried.
+* Full stdout/stderr archived to logs/<model>/<backbone>/<cond>/seed<s>/<dom>_h<h>.log
+  so failed cells can be debugged without re-running.
+* Global append-only sweep log: `sweep_log.jsonl` (one line per completed cell).
+* Provenance recorded in each RunResult: hostname, git SHAs, python/torch
+  versions, CUDA_VISIBLE_DEVICES.
+
+DATA PATH RESOLUTION
+--------------------
+For non-seeded conditions (C1/C2/C4/C5/C7/C8), all seeds share a single
+seed0/ CSV on disk. The `resolve_data_path` function transparently
+substitutes seed0/ for these. Only C3_shuffled is genuinely seed-dependent.
+
+C6_unimodal has no perturbation CSV; it uses C1_original data with the
+model's unimodal flag (--no_text for Aurora, etc.).
 """
 
 from __future__ import annotations

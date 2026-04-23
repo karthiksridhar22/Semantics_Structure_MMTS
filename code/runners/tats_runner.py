@@ -6,18 +6,34 @@ Runs TaTS (text-as-time-series covariates) on a single cell. Unlike Aurora,
 TaTS trains (default 5 epochs) before eval.
 
 TaTS specifics:
-* Architecture: backbone (iTransformer by default) takes concat([TS, text_emb
-  projected channels]). enc_in = 1 + text_emb. With text_emb=0, becomes pure
-  univariate backbone — which is our C6 unimodal configuration.
-* Precomputes LLM embeddings at data-load time using a frozen LLM (default
-  GPT-2). Heavy on first load, cheap on subsequent batches.
-* C6: --text_emb 0 --prior_weight 0 (both flags to zero out the text branch
-  AND the numeric prior fusion).
+* Architecture: backbone (iTransformer by default) takes concat([TS,
+  text_emb projected channels]). enc_in = 1 + text_emb. With text_emb=0,
+  the backbone becomes pure univariate — our C6 unimodal configuration.
+* Precomputes LLM embeddings at data-load time using a frozen LLM
+  (default GPT-2). Heavy on first load, cheap on subsequent batches.
+* C6 unimodal: --text_emb 0 --prior_weight 0 (zero out text branch AND
+  numeric prior fusion).
 * Reference hyperparameters from scripts/main_forecast.sh:
     seq_len=24, label_len=12, pred_len=48, text_emb=12, prior_weight=0.5,
     train_epochs=5, patience=5.
+  These can be overridden per-cell via RunSpec.seq_len / label_len; the
+  orchestrator's --preset time_mmd flag sets per-domain paper values.
 
-Compute: each cell ~5-15 minutes on a GPU depending on domain size.
+Backbones:
+* TaTS's own exp_basic.py only registers `iTransformer` in model_dict.
+* Our apply_repo_patches.py patch adds 8 more: Autoformer, DLinear,
+  FEDformer, FiLM, Informer, PatchTST, Transformer, Crossformer.
+* TATS_ALL_BACKBONES (this module) enumerates all 9 after patch.
+
+Checkpoints:
+* TaTS saves a checkpoint.pth at repos/TaTS/checkpoints/<setting>/
+  during training (via early_stopping). The runner parses the setting
+  string from stdout and records the checkpoint path in
+  RunResult.extra['checkpoint_path'] so future probe scripts can
+  reload the trained model without re-training.
+
+Compute: each cell ~15-30 seconds on an A10G for small domains,
+up to ~2 minutes for Environment.
 """
 
 from __future__ import annotations
@@ -115,6 +131,17 @@ def run_tats(spec: RunSpec) -> RunResult:
     log_p.parent.mkdir(parents=True, exist_ok=True)
     log_p.write_text(f'=== STDOUT ===\n{stdout}\n\n=== STDERR ===\n{stderr}\n')
     result.stdout_log_path = str(log_p)
+
+    # Record the setting string (from stdout) so we can find the saved
+    # checkpoint later for probing. TaTS training always writes
+    # checkpoints to <repo>/checkpoints/<setting>/checkpoint.pth.
+    import re
+    m = re.search(r'>>>>>>>start training : ([^>]+)>>>', stdout)
+    if m:
+        setting = m.group(1).strip()
+        ckpt_path = TATS_REPO / 'checkpoints' / setting / 'checkpoint.pth'
+        result.extra['checkpoint_path'] = str(ckpt_path)
+        result.extra['training_setting'] = setting
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

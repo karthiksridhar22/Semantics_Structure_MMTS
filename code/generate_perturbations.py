@@ -17,44 +17,68 @@ C1 Original : Unmodified data. Baseline for paper reproducibility.
 C2 Empty    : Text = "". Numeric text-derived features also zeroed.
               If C2 ≈ C1, the multimodal model isn't using text-derived signal.
 C3 Shuffled : Text column permuted within-domain. Numeric priors left intact.
+              Seed-dependent: different seeds produce different permutations.
               If C3 ≈ C1, the text ENCODER isn't contributing semantic signal.
               (Weaker claim than C2 because numeric priors still help.)
-C4 CrossDom : Text replaced with paired domain's text (cycled+shuffled).
+C4 CrossDom : Text replaced with paired domain's text, DATE-ALIGNED (no
+              repetition, no random shuffle). For each target row we take
+              the paired domain's latest fact with date ≤ target's date.
+              Deterministic — content does not depend on the seed.
               If C4 ≈ C3, text isn't domain-specific for the model.
               If C4 << C3, text has domain-specific value.
 C5 Constant : Text = "Time series data point." Numeric priors also zeroed.
               Similar to C2 but with non-empty tokens; tests whether the
               PRESENCE of any text affects gating.
-C7 Null     : Text = "0". Numeric priors also zeroed.
-              Like C2/C5 but shortest non-empty token.
-C8 Oracle   : Text encodes ground-truth future values.
+C7 Null     : Text = "null" (non-numeric string; we avoid '0' because CSV
+              round-trip coerces '0' columns to integer dtype, breaking
+              downstream tokenizers). Numeric priors also zeroed.
+C8 Oracle   : Text encodes ground-truth future OT values.
               POSITIVE CONTROL — a model that reads text semantically
               MUST benefit. If it doesn't, the probe is broken.
 
-DESIGN DECISIONS (per user)
----------------------------
-* For C2/C5/C7: also zero the text-derived NUMERIC columns
-  (prior_history_avg, etc.) so these conditions are "no text-derived info."
+SEED DIMENSION
+--------------
+Only C3 is seed-dependent (content changes with the RNG). C1, C2, C4, C5,
+C7, C8 produce byte-identical CSVs across seeds, so we write them once
+under seed0/ and the runner's path resolver points all seeds at seed0/
+for these conditions. The runner's seed still controls MODEL RNG
+(weight init, dropout, batch order) for every cell.
+
+DESIGN DECISIONS
+----------------
+* For C2/C5/C7: zero the text-derived NUMERIC columns (prior_history_avg,
+  etc.) — these conditions are "no text-derived info" overall.
 * For C3/C4: do NOT zero numeric priors; these test the text-encoder path
   specifically, with the prior still available as a cheap signal.
 * For C8: do NOT zero numerics; oracle text alone should already saturate
   performance, and the prior can only help.
+* Numeric coercion at load time: some source CSVs (SocialGood has 8)
+  contain empty strings in OT; we coerce numeric columns properly and
+  drop rows with NaN OT so sklearn's scaler doesn't crash downstream.
 
 OUTPUT LAYOUT
 -------------
-/home/claude/probe_project/data/
+<project_root>/data/
     mmtsflib/
-        C1_original/seed2021/<DomainDir>/<file>.csv
-        C2_empty/seed2021/<DomainDir>/<file>.csv
-        ... for each condition x seed x domain
+        C1_original/seed0/<DomainDir>/<file>.csv       (one copy)
+        C3_shuffled/seed2021/<DomainDir>/<file>.csv
+        C3_shuffled/seed2022/<DomainDir>/<file>.csv
+        C3_shuffled/seed2023/<DomainDir>/<file>.csv
+        C2_empty/seed0/...                             (one copy)
+        C4_crossdomain/seed0/...                       (one copy, date-aligned)
+        C5_constant/seed0/...
+        C7_null/seed0/...
+        C8_oracle/seed0/...
     tats/
-        C1_original/seed2024/<Domain>.csv
-        ... for each condition x seed x domain
+        (same layout, flat <Domain>.csv files)
     manifest.json   — what was generated, when, with what parameters
 
-Every perturbed CSV preserves row count, date columns, OT values, and all
-non-text-related columns byte-exact with the original. This is enforced
-by the validator (see bottom of file).
+Total: 9 domains × (6 non-seeded + 3 seeded × 1 = 9) = 81 CSVs per repo,
+×2 repos (mmtsflib layout + tats layout) = 162 CSVs.
+
+Every perturbed CSV preserves row count (post-coercion), date columns,
+OT values, and all non-text-related columns byte-exact with the
+post-coerce original. This is enforced by the validator.
 
 USAGE
 -----

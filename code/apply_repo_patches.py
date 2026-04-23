@@ -4,29 +4,43 @@ apply_repo_patches.py
 
 Applies surgical, documented patches to each repo so that:
 
-1. `pd.read_csv()` uses `keep_default_na=False`, which makes our C2_empty
-   condition produce literal `''` (empty string) instead of pandas-default
-   NaN (which would round-trip to the literal string 'nan' via f-string
-   coercion in MM-TSFlib or to 'No information available' in TaTS/Aurora).
+1. `pd.read_csv()` uses `keep_default_na=False` in each loader, which
+   makes our C2_empty condition produce literal `''` (empty string)
+   instead of pandas-default NaN (which would round-trip to 'nan' via
+   f-string coercion in MM-TSFlib or to 'No information available' in
+   TaTS/Aurora).
 
 2. TaTS's and Aurora's post-hoc `pd.isnull(text)` replacement block is
-   disabled — otherwise it would override our literal `''` values.
+   disabled — otherwise it would override our literal `''` values with
+   'No information available'.
 
-3. Aurora gets a new `--no_text` CLI flag wired through to set
+3. pandas 2.x API fix for `df.drop(cols, 1)` → `df.drop(columns=cols)`.
+
+4. Aurora gets a new `--no_text` CLI flag wired through to set
    `text_input_ids=None` — this is how we do C6 (unimodal) for Aurora,
    per our design decision that C6 uses each paper's reported unimodal
    baseline.
 
-Patches are IDEMPOTENT — running twice is safe; it re-checks and skips
-already-applied sections.
+5. TaTS's `exp/exp_basic.py` model_dict is extended from {iTransformer}
+   to include 9 backbones available under models/ — their exp_basic
+   only registers iTransformer by default, so --backbones Autoformer
+   etc. would KeyError without this patch.
 
-Each patch also writes a `.probe_backup` of the original file so we
-can revert.
+Patches are IDEMPOTENT — running twice is safe; the fingerprint check
+(looks for the MARKER string after patch) skips already-applied sections.
+The fingerprint check runs BEFORE the pattern-match check because some
+patches have `new` that CONTAINS `old` (e.g. "insert a line after X"
+preserves X), which would otherwise cause double-application.
+
+Each patch writes a `.probe_backup` of the original file on first apply
+so we can revert cleanly.
 
 Run with:
-    python3 code/apply_repo_patches.py            # applies
+    python3 code/apply_repo_patches.py            # applies (idempotent)
     python3 code/apply_repo_patches.py --revert   # restores originals
-    python3 code/apply_repo_patches.py --check    # reports status
+    python3 code/apply_repo_patches.py --check    # reports marker count
+
+Total edits: 13 (2 MM-TSFlib, 5 TaTS, 6 Aurora).
 """
 
 from __future__ import annotations

@@ -2,8 +2,9 @@
 run_experiments.py
 ==================
 
-Orchestrator: iterates the grid of (model, condition, seed, domain, pred_len),
-calls the right runner, saves results, supports resume.
+Orchestrator: iterates the grid of (model, backbone, condition, seed,
+domain, pred_len), calls the right runner, saves results, supports
+resume after crashes.
 
 USAGE
 -----
@@ -11,31 +12,64 @@ USAGE
   python run_experiments.py --models aurora --conditions C1_original \
       --domains Economy --pred_lens 8 --seeds 2021
 
-  # Full grid
-  python run_experiments.py --models aurora tats mmtsflib \
+  # Full grid with Time-MMD paper horizons (per-domain):
+  #   Environment:         pred_lens = 48, 96, 192, 336  (seq_len=96)
+  #   Health, Energy:      pred_lens = 12, 24, 36, 48    (seq_len=36)
+  #   Other 6 monthly doms: pred_lens = 6, 8, 10, 12     (seq_len=8)
+  #
+  # For Aurora: seq_len stays at Aurora's native per-domain defaults
+  # (Aurora is zero-shot; its seq_len is a pretrained-context choice,
+  # not a benchmark knob). Only pred_lens from the preset are applied.
+  python run_experiments.py --models tats --preset time_mmd \
+      --backbones iTransformer DLinear Autoformer \
       --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
                    C5_constant C6_unimodal C7_null C8_oracle \
       --domains Agriculture Climate Economy Energy Environment Health \
                 Security SocialGood Traffic \
-      --pred_lens 8 12 24 48
+      --seeds 2021 2022 2023
 
-  # Resume (skips successful runs)
-  python run_experiments.py ... (resume is default)
+  # Resume is automatic: cells with a successful result JSON are skipped.
+  # .running markers from crashed runs are auto-cleared on startup.
+  python run_experiments.py ... (same command as before; just re-run)
 
-  # Force re-run
+  # Force re-run (ignore existing results)
   python run_experiments.py ... --force
 
-DESIGN
-------
-* Every result is one JSON file under results/<model>/<cond>/seed<s>/...
-* A dry-run mode prints the grid without executing — useful for checking
-  grid size before committing GPU time.
-* Failures DON'T abort the sweep — they're logged and we continue. A
-  summary at the end lists what failed.
-* C6_unimodal doesn't have its own perturbation CSV; the runner uses
-  C1_original's CSVs and sets the appropriate CLI flag (--no_text for
-  Aurora, --prompt_weight 0 for MM-TSFlib, etc.). So the orchestrator
-  maps C6 -> C1 for data path resolution.
+  # Dry-run to check grid size before committing GPU time
+  python run_experiments.py ... --dry_run
+
+BACKBONE HANDLING
+-----------------
+* Aurora has no backbone axis (arch is fixed by pretrained weights).
+* TaTS and MM-TSFlib: default is each model's paper-default (iTransformer
+  for TaTS, Informer for MM-TSFlib). Use --backbones X Y Z for an explicit
+  subset, or --all_backbones to iterate every backbone registered in each
+  repo's model_dict.
+
+CHECKPOINTING & RESUME
+----------------------
+* Every result is one JSON file at:
+    results/<model>/<backbone>/<condition>/seed<s>/<domain>_h<pred_len>.json
+* Atomic writes: result JSONs are written to .tmp then renamed (so a
+  crash mid-write never leaves a corrupt file).
+* In-progress marker: while a cell is running, a sibling `.running` file
+  is present. On startup, leftover markers from crashed runs are cleared,
+  and those cells are retried.
+* Per-cell full stdout/stderr saved to:
+    logs/<model>/<backbone>/<condition>/seed<s>/<domain>_h<pred_len>.log
+* Global append-only progress log: `sweep_log.jsonl` (one line per cell).
+
+CONDITIONS
+----------
+* C1 original, C2 empty, C3 shuffled (seed-dependent), C4 crossdomain
+  (date-aligned, deterministic), C5 constant, C7 null, C8 oracle — all
+  are CSV-level perturbations.
+* C6 unimodal has no perturbation CSV; the runner uses C1's CSV and sets
+  the model's own unimodal flag (--no_text for Aurora, prompt_weight=0
+  for MM-TSFlib, text_emb=0 for TaTS).
+
+Failures DO NOT abort the sweep — they're logged and we continue. A
+summary at the end lists what failed with log file paths for debugging.
 
 Seeds per model (used if --seeds not specified):
   mmtsflib: 2021, 2022, 2023
@@ -76,6 +110,23 @@ ALL_CONDITIONS = [
 ALL_DOMAINS = ['Agriculture', 'Climate', 'Economy', 'Energy', 'Environment',
                'Health', 'Security', 'SocialGood', 'Traffic']
 
+# Time-MMD paper horizon & window presets (arXiv:2406.08627, Section "Setup").
+# Keyed by domain → (seq_len, label_len, [pred_lens]).
+#   Daily    (Environment):       seq_len=96, label_len=48, pred_lens=[48,96,192,336]
+#   Weekly   (Health, Energy):    seq_len=36, label_len=18, pred_lens=[12,24,36,48]
+#   Monthly  (everything else):   seq_len=8,  label_len=4,  pred_lens=[6,8,10,12]
+TIME_MMD_PRESET = {
+    'Environment': (96, 48, [48, 96, 192, 336]),
+    'Health':      (36, 18, [12, 24, 36, 48]),
+    'Energy':      (36, 18, [12, 24, 36, 48]),
+    'Agriculture': (8, 4, [6, 8, 10, 12]),
+    'Climate':     (8, 4, [6, 8, 10, 12]),
+    'Economy':     (8, 4, [6, 8, 10, 12]),
+    'Security':    (8, 4, [6, 8, 10, 12]),
+    'SocialGood':  (8, 4, [6, 8, 10, 12]),
+    'Traffic':     (8, 4, [6, 8, 10, 12]),
+}
+
 # Default backbone sets per model. Aurora has no backbone axis (its arch
 # is fixed by the pretrained weights), so we emit a single [None] sentinel.
 DEFAULT_BACKBONES = {
@@ -91,7 +142,21 @@ ALL_BACKBONES = {
 
 
 def build_specs(models, conditions, seeds_per_model, domains, pred_lens,
-                backbones_per_model, extra_args=None) -> list[RunSpec]:
+                backbones_per_model, extra_args=None,
+                use_time_mmd_preset=False) -> list[RunSpec]:
+    """Build the flat list of RunSpecs to execute.
+
+    If `use_time_mmd_preset=True`:
+      - TaTS and MM-TSFlib: each domain uses the Time-MMD paper's full
+        preset (seq_len, label_len, pred_lens).
+      - Aurora: each domain uses the paper's pred_lens, but seq_len/label_len
+        stay at Aurora's own per-domain defaults. Aurora is pretrained with a
+        specific context-window behavior; using seq_len=8 for monthly data
+        would starve it of context and produce degenerate zero-shot results.
+
+    Otherwise, pred_lens is applied uniformly across domains and
+    seq_len/label_len use each runner's default.
+    """
     extra_args = extra_args or {}
     specs = []
     for model in models:
@@ -100,11 +165,29 @@ def build_specs(models, conditions, seeds_per_model, domains, pred_lens,
         for cond in conditions:
             for seed in seeds:
                 for domain in domains:
-                    for h in pred_lens:
+                    if use_time_mmd_preset:
+                        if domain not in TIME_MMD_PRESET:
+                            raise ValueError(f'no Time-MMD preset for {domain}')
+                        preset_seq, preset_lab, domain_pred_lens = TIME_MMD_PRESET[domain]
+                        # Aurora keeps its own seq_len (pretrained context);
+                        # the preset only contributes pred_lens for Aurora.
+                        if model == 'aurora':
+                            seq_len = None   # runner uses its own default
+                            label_len = None
+                        else:
+                            seq_len = preset_seq
+                            label_len = preset_lab
+                    else:
+                        seq_len = None
+                        label_len = None
+                        domain_pred_lens = pred_lens
+                    for h in domain_pred_lens:
                         for bb in bbs:
                             specs.append(RunSpec(
                                 model=model, condition=cond, seed=seed,
-                                domain=domain, pred_len=h, backbone=bb,
+                                domain=domain, pred_len=h,
+                                seq_len=seq_len, label_len=label_len,
+                                backbone=bb,
                                 extra_args=dict(extra_args),
                             ))
     return specs
@@ -135,7 +218,15 @@ def main():
                     default=ALL_CONDITIONS)
     ap.add_argument('--domains', nargs='+', choices=ALL_DOMAINS,
                     default=ALL_DOMAINS)
-    ap.add_argument('--pred_lens', nargs='+', type=int, default=[8])
+    ap.add_argument('--pred_lens', nargs='+', type=int, default=[8],
+                    help='Ignored if --preset time_mmd is used')
+    ap.add_argument('--preset', choices=['time_mmd'], default=None,
+                    help='Apply per-domain horizon preset. time_mmd uses '
+                         'the Time-MMD paper\'s horizon groups: '
+                         'daily(Environment)=[48,96,192,336], '
+                         'weekly(Health,Energy)=[12,24,36,48], '
+                         'monthly(rest)=[6,8,10,12]. Also sets per-domain '
+                         'seq_len and label_len to the paper\'s defaults.')
     ap.add_argument('--seeds', nargs='+', type=int,
                     help='If set, same seeds used for ALL models (otherwise '
                          'uses DEFAULT_SEEDS per model)')
@@ -188,7 +279,8 @@ def main():
 
     specs = build_specs(args.models, args.conditions, seeds_per_model,
                         args.domains, args.pred_lens,
-                        backbones_per_model)
+                        backbones_per_model,
+                        use_time_mmd_preset=(args.preset == 'time_mmd'))
 
     if args.dry_run:
         print(f'Grid size: {len(specs)} cells')

@@ -5,20 +5,38 @@ runners/mmtsflib_runner.py
 Runs MM-TSFlib on a single cell.
 
 MM-TSFlib specifics:
-* Late-fusion architecture: output = (1-prompt_weight)*TS + prompt_weight*
-  (norm(text_emb) + prior_y). The prior_y comes from the `prior_history_avg`
-  column (a closed-LLM-derived numeric forecast).
-* C6 unimodal: prompt_weight=0. This zeroes both the LLM embedding contribution
-  AND the prior_y addend, leaving pure TS backbone output.
-* Uses features='S' (we verified features='M' crashes on string columns in
-  shipped code). All our perturbation CSVs work with features='S'.
+* Late-fusion architecture: output = (1-prompt_weight)*TS_output +
+  prompt_weight*(norm(text_emb) + prior_y). The prior_y comes from
+  the `prior_history_avg` column (a closed-LLM-derived numeric
+  forecast).
+* C6 unimodal: prompt_weight=0. Zeroes both the LLM embedding
+  contribution AND the prior_y addend, leaving pure TS backbone output.
+* Uses features='S' (we verified features='M' crashes on string
+  columns in shipped code — all 9 domains fail). All our perturbation
+  CSVs work with features='S'.
 * LLM: default BERT (frozen). Reference script uses text_len=4
   (reads Final_Search_4).
 * Reference hyperparameters (scripts/week_health.sh):
     seed=2021, text_len=4, prompt_weight=0.1, seq_len=24, label_len=12,
-    pred_len in {12,24,36,48}, llm_model=BERT, features=M [BROKEN].
+    pred_len in {12,24,36,48}, llm_model=BERT, features=M [BROKEN, we
+    use S].
+  These can be overridden per-cell via RunSpec.seq_len / label_len; the
+  orchestrator's --preset time_mmd flag sets per-domain paper values.
 
-Compute: similar to TaTS, ~5-15 min/cell on a GPU.
+Backbones:
+* MM-TSFlib registers 22 backbones in exp/exp_basic.py (out-of-box,
+  no patch needed — unlike TaTS). See MMTSFLIB_ALL_BACKBONES below.
+* Time-MMD paper uses 10 of these (the 10 in `PAPER_BACKBONES`).
+
+Checkpoints:
+* MM-TSFlib saves a checkpoint.pth at repos/MM-TSFlib/checkpoints/<setting>/
+  during training (via early_stopping). The runner parses the setting
+  string from stdout and records the checkpoint path in
+  RunResult.extra['checkpoint_path'] so future probe scripts can
+  reload the trained model without re-training.
+
+Compute: similar to TaTS, ~15-30 sec/cell on an A10G for small domains,
+several minutes for Environment.
 """
 
 from __future__ import annotations
@@ -111,6 +129,16 @@ def run_mmtsflib(spec: RunSpec) -> RunResult:
     log_p.parent.mkdir(parents=True, exist_ok=True)
     log_p.write_text(f'=== STDOUT ===\n{stdout}\n\n=== STDERR ===\n{stderr}\n')
     result.stdout_log_path = str(log_p)
+
+    # Record the setting/checkpoint path so we can probe the trained model
+    # later. MM-TSFlib writes checkpoints to <repo>/checkpoints/<setting>/.
+    import re
+    m = re.search(r'>>>>>>>start training : ([^>]+)>>>', stdout)
+    if m:
+        setting = m.group(1).strip()
+        ckpt_path = MMTSFLIB_REPO / 'checkpoints' / setting / 'checkpoint.pth'
+        result.extra['checkpoint_path'] = str(ckpt_path)
+        result.extra['training_setting'] = setting
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

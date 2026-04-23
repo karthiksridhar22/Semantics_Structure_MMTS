@@ -98,12 +98,21 @@ pip install "transformers>=4.40,<5.0" "tokenizers<0.21" \
 conda deactivate
 ```
 
-**If you already created the aurora env with transformers 5.x** (and hit the AttributeError), fix in place:
+**If you already created the aurora env with transformers 5.x** (and hit the AttributeError), fix in place. Do NOT use `--force-reinstall` — it also reinstalls torchvision from default PyPI, which breaks the CUDA torch/torchvision pairing (`RuntimeError: operator torchvision::nms does not exist`). Instead:
 
 ```bash
 conda activate aurora
-pip install "transformers>=4.40,<5.0" "tokenizers<0.21" "accelerate<1.0" --force-reinstall
-python -c "import transformers; print(transformers.__version__)"   # should be 4.x
+pip uninstall -y transformers tokenizers accelerate
+pip install "transformers>=4.40,<5.0" "tokenizers<0.21" "accelerate<1.0"
+python -c "import transformers; print('transformers:', transformers.__version__)"   # should be 4.x
+python -c "import torch, torchvision; print('torch', torch.__version__, '| torchvision', torchvision.__version__)"  # both should be +cu121
+```
+
+If `torchvision` already got damaged by a prior `--force-reinstall`, restore the correct CUDA build:
+
+```bash
+pip uninstall -y torch torchvision
+pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu121
 ```
 
 ### CUDA note
@@ -141,6 +150,34 @@ sudo apt-get install -y unrar
 cd repos/MM-TSFlib/data/Environment && unrar x -y NewYork_AQI_Day.rar
 ```
 
+## Horizon presets — per-domain pred_lens (Time-MMD paper protocol)
+
+Different domains have different natural horizons per the Time-MMD paper (arXiv:2406.08627):
+
+| Frequency | Domains | `seq_len` | `label_len` | `pred_lens` |
+|---|---|---|---|---|
+| Daily | Environment | 96 | 48 | [48, 96, 192, 336] |
+| Weekly | Health, Energy | 36 | 18 | [12, 24, 36, 48] |
+| Monthly | Agriculture, Climate, Economy, Security, SocialGood, Traffic | 8 | 4 | [6, 8, 10, 12] |
+
+Total: 36 (domain × horizon) pairs if you run all 9 domains at all 4 paper horizons each.
+
+**Use the `--preset time_mmd` flag to apply all of this automatically.**
+
+```bash
+# Runs each domain at ITS paper horizons; sets seq_len/label_len per paper
+python3 code/run_experiments.py --preset time_mmd [other args...]
+```
+
+Behavior of `--preset time_mmd`:
+
+- **TaTS & MM-TSFlib**: each domain gets the paper's `(seq_len, label_len, pred_lens)` tuple exactly.
+- **Aurora**: pred_lens from paper, but `seq_len` stays at Aurora's native per-domain defaults. Rationale: Aurora is zero-shot; its seq_len is an architectural choice about context window, not a Time-MMD benchmark parameter. Starving Aurora with seq_len=8 for monthly data produces degenerate results. If you want Aurora+Time-MMD-seq_len for comparison, pass `--seq_len 8` etc. explicitly (not currently a CLI flag; for that, edit `AURORA_DEFAULTS` in `aurora_runner.py`).
+
+**If you use `--preset time_mmd`, the `--pred_lens` flag is ignored.**
+
+**Backwards compatibility**: your existing 168 Aurora `h=8` results are automatically reused — resume logic matches cells by `result_path` which includes `h<pred_len>`. Running the preset will SKIP cells that are already complete and only run new horizons.
+
 ## Pipeline execution
 
 ### Step 1: Apply the repo patches (one time)
@@ -151,16 +188,16 @@ python3 code/apply_repo_patches.py --check   # verify
 python3 code/apply_repo_patches.py --revert  # undo anytime
 ```
 
-Expect 11 patches (2 MM-TSFlib, 3 TaTS, 6 Aurora). All marked `# PROBE_PATCH_APPLIED` and backed up `*.probe_backup`.
+Expect 13 patches (2 MM-TSFlib, 5 TaTS [incl. backbone registration], 6 Aurora). All marked `# PROBE_PATCH_APPLIED` and backed up `*.probe_backup`.
 
 ### Step 2: Generate the perturbed CSVs
 
 ```bash
 python3 code/generate_perturbations.py --repo all
-# Expect: "SUMMARY: 198 / 198 files validated clean"
+# Expect: "SUMMARY: 162 / 162 files validated clean"
 ```
 
-**Why 198, not 378?** Only C3 (shuffled) and C4 (cross-domain) have seed-dependent content. C1, C2, C5, C7, C8 produce byte-identical CSVs regardless of seed, so we write them once under `seed0/` to save disk + generation time. The runner's RunSpec.seed still controls the *model's* RNG (weight init, dropout, data order); it just reads the same CSV for non-seeded conditions.
+**Why 162, not 378?** Only C3 (shuffled) has seed-dependent content after we switched C4 to date-aligned. C1, C2, C4, C5, C7, C8 produce byte-identical CSVs regardless of seed, so we write them once under `seed0/`. The runner's RunSpec.seed still controls the *model's* RNG (weight init, dropout, data order); it just reads the same CSV for non-seeded conditions.
 
 On-disk layout:
 - `data/tats/C1_original/seed0/Economy.csv` ← one copy, all runs read it
@@ -182,68 +219,136 @@ python3 code/run_experiments.py \
 
 Output: two JSONs at `results/aurora/default/{C1_original,C6_unimodal}/seed2021/Economy_h8.json` with non-null `mse`/`mae`. Takes a few minutes.
 
-### Step 4: Full sweep with multiple backbones (nohup-safe)
+### Step 4: Full sweep with per-domain horizons (nohup-safe)
 
-Each `--model` must run in its own conda env. Orchestrator is resume-safe: cells with a successful result are skipped; cells with an `.running` marker from a crashed run are automatically retried.
+Each `--model` must run in its own conda env. Orchestrator is resume-safe: cells with a successful result are skipped; cells with a stale `.running` marker from a crashed run are auto-cleared and retried.
 
-Start one nohup per model (or run sequentially):
+The following commands use `--preset time_mmd` (per-domain horizons + window sizes per the Time-MMD paper) and the paper's backbone set.
+
+**Aurora — all conditions, all domains, all paper horizons, 3 seeds:**
 
 ```bash
-# TaTS — one default backbone (iTransformer)
-conda activate tats
+conda activate aurora
+export AURORA_WEIGHTS=$(pwd)/weights/aurora
 nohup python3 -u code/run_experiments.py \
-    --models tats \
+    --models aurora --preset time_mmd \
     --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
                  C5_constant C6_unimodal C7_null C8_oracle \
     --domains Agriculture Climate Economy Energy Environment \
               Health Security SocialGood Traffic \
-    --pred_lens 48 --seeds 2021 2022 2023 \
-    > nohup_tats.log 2>&1 &
-echo "TaTS PID: $!"
+    --seeds 2021 2022 2023 \
+    > nohup_aurora.log 2>&1 &
+echo "Aurora PID: $!"
+# Total: 864 cells. Existing h=8 cells auto-skip.
 ```
 
-**To run 3 backbones per non-Aurora model** (recommended for backbone-deviation analysis without 22× compute on MM-TSFlib):
+**TaTS — 3 representative backbones (iTransformer / DLinear / Autoformer):**
 
 ```bash
-# TaTS with 3 representative backbones
+conda activate tats
 nohup python3 -u code/run_experiments.py \
-    --models tats \
+    --models tats --preset time_mmd \
     --backbones iTransformer DLinear Autoformer \
     --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
                  C5_constant C6_unimodal C7_null C8_oracle \
     --domains Agriculture Climate Economy Energy Environment \
               Health Security SocialGood Traffic \
-    --pred_lens 48 --seeds 2021 2022 2023 \
+    --seeds 2021 2022 2023 \
     > nohup_tats.log 2>&1 &
+echo "TaTS PID: $!"
+# Total: 2592 cells.
 ```
 
-Or `--all_backbones` to run every backbone in the repo (9 for TaTS, 22 for MM-TSFlib — expensive for MM-TSFlib).
+**TaTS — all 9 backbones (paper-complete):**
 
-Same pattern for MM-TSFlib and Aurora (with their respective conda envs). **`python3 -u`** is important: disables output buffering, so `tail -f nohup_tats.log` actually shows progress. Our runner also calls `sys.stdout.flush()` after each cell for the same reason.
+```bash
+conda activate tats
+nohup python3 -u code/run_experiments.py \
+    --models tats --preset time_mmd --all_backbones \
+    --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
+                 C5_constant C6_unimodal C7_null C8_oracle \
+    --domains Agriculture Climate Economy Energy Environment \
+              Health Security SocialGood Traffic \
+    --seeds 2021 2022 2023 \
+    > nohup_tats_all.log 2>&1 &
+# Total: 7776 cells.
+```
+
+**MM-TSFlib — paper's 10 backbones:**
+
+```bash
+conda activate mmtsflib
+nohup python3 -u code/run_experiments.py \
+    --models mmtsflib --preset time_mmd \
+    --backbones Informer Autoformer Transformer Nonstationary_Transformer \
+                DLinear FEDformer Reformer Crossformer iTransformer FiLM \
+    --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
+                 C5_constant C6_unimodal C7_null C8_oracle \
+    --domains Agriculture Climate Economy Energy Environment \
+              Health Security SocialGood Traffic \
+    --seeds 2021 2022 2023 \
+    > nohup_mmtsflib.log 2>&1 &
+echo "MM-TSFlib PID: $!"
+# Total: 8640 cells.
+```
+
+**MM-TSFlib — full 22-backbone sweep (expensive but complete):**
+
+```bash
+conda activate mmtsflib
+nohup python3 -u code/run_experiments.py \
+    --models mmtsflib --preset time_mmd --all_backbones \
+    --conditions C1_original C2_empty C3_shuffled C4_crossdomain \
+                 C5_constant C6_unimodal C7_null C8_oracle \
+    --domains Agriculture Climate Economy Energy Environment \
+              Health Security SocialGood Traffic \
+    --seeds 2021 2022 2023 \
+    > nohup_mmtsflib_all.log 2>&1 &
+# Total: 19008 cells. Budget: probably too much for one week on one GPU.
+```
+
+**`python3 -u`** is important: disables output buffering, so `tail -f nohup_tats.log` actually shows progress. Our runner also calls `sys.stdout.flush()` after each cell for the same reason.
+
+**Available backbones** (see `runners/tats_runner.py` → `TATS_ALL_BACKBONES` and `runners/mmtsflib_runner.py` → `MMTSFLIB_ALL_BACKBONES`):
+
+- **TaTS** (9, after our patch): iTransformer, Autoformer, DLinear, FEDformer, FiLM, Informer, PatchTST, Transformer, Crossformer
+- **MM-TSFlib** (22): Informer, Autoformer, Transformer, Nonstationary_Transformer, DLinear, FEDformer, TimesNet, LightTS, Reformer, ETSformer, PatchTST, Pyraformer, MICN, Crossformer, FiLM, iTransformer, Koopa, TiDE, FreTS, TimeMixer, TSMixer, SegRNN
 
 **Tracking progress during a sweep:**
 
 ```bash
 tail -f nohup_tats.log                  # live log
 tail -f sweep_log.jsonl                 # one line per completed cell
-ls results/tats/iTransformer/C1_original/seed2021/ | wc -l   # count completed
-find results/ -name "*.running" | wc -l                      # count in-progress
+find results -name '*.json' | xargs grep -l '"success": true' 2>/dev/null | wc -l
+find results -name '*.running' | wc -l                       # count in-progress
 ```
 
-**If the instance dies mid-sweep:**
+**If the instance dies mid-sweep**, just re-launch the same command. The orchestrator's `clear_stale_markers()` cleans leftover `.running` files, and successful results are auto-skipped. Grep for `SKIP (done)` in the log to confirm resume worked:
 
 ```bash
-# On the new instance — the orchestrator handles resume automatically.
-# .running markers from the old run are cleared on startup.
-# Successful results are skipped.
-conda activate tats
-nohup python3 -u code/run_experiments.py --models tats --all_backbones ... \
-    >> nohup_tats.log 2>&1 &
-# Grep for how many were skipped to confirm resume worked:
-# grep "SKIP (done)" nohup_tats.log | wc -l
+grep -c "SKIP (done)" nohup_tats.log
 ```
 
 **Per-cell full logs** are saved to `logs/<model>/<backbone>/<condition>/seed{s}/<domain>_h<h>.log` so you don't have to re-run failed cells to debug.
+
+### Running two GPU instances in parallel
+
+You have Instance A for Aurora+TaTS and Instance B for MM-TSFlib. Both can read/write the same `results/` via a shared volume if available, or run fully independently on separate copies of the project.
+
+For independent runs, each instance has its own `results/` tree; merge them at analysis time by copying `results/mmtsflib/` from Instance B onto Instance A before running `analyze_results.py`.
+
+### Model checkpoints are saved automatically (for future probe use)
+
+TaTS and MM-TSFlib both save `checkpoint.pth` during training via their built-in `early_stopping` mechanism. These persist at `repos/<Model>/checkpoints/<setting>/checkpoint.pth`. The runner records this path in each RunResult's `extra.checkpoint_path` field so future probe scripts can reload the exact trained model without re-running training.
+
+Aurora is zero-shot — no checkpoint is produced; the pretrained weights at `$AURORA_WEIGHTS` serve the same purpose.
+
+This means you can run TaTS/MM-TSFlib probes *after* the main sweep completes without re-training, by:
+1. Reading `result.extra.checkpoint_path` from a RunResult JSON
+2. Loading the checkpoint into the same architecture with the same args
+3. Attaching hooks and running diagnostics
+
+(A TaTS/MM-TSFlib probe script is not yet built — deferred until after main results. The infrastructure to enable it is in place.)
 
 ### Step 5 (optional): Aurora diagnostic probes
 

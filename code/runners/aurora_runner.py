@@ -7,16 +7,22 @@ pred_len) cell.
 
 Aurora specifics:
 * Zero-shot (--is_training 0): loads pretrained weights, no gradient step.
-* Per-domain seq_len varies — we default to the values from their reference
-  script but allow override via spec.seq_len.
-* Requires pretrained weights at --model_path. We check for them and fail
-  cleanly with a helpful message if absent.
-* C6 unimodal: we pass --no_text (added via patch) which makes the model
-  invoke text_features=None internally.
+  The seed here controls ONLY inference-time randomness (the probabilistic
+  flow-matching head samples num_samples=100 predictions and averages).
+* Per-domain seq_len varies — we default to the values from Aurora's
+  reference script (AURORA_DEFAULTS below), but allow override via
+  spec.seq_len. For the `--preset time_mmd` orchestrator flag, Aurora
+  keeps its native seq_len (not the Time-MMD-paper value) since its
+  pretrained context-window behavior degrades with short seq_len.
+* Requires pretrained weights at --model_path. AURORA_WEIGHTS env var
+  points at the HF snapshot. We check and fail cleanly if absent.
+* C6 unimodal: we pass --no_text (added via patch) which makes the
+  model invoke text_features=None internally.
+* No backbone axis: Aurora's architecture is fixed by its pretrained
+  weights. Results land under results/aurora/default/.
 
-Aurora is the simplest runner because training doesn't happen — we just
-invoke run_longExp.py with is_training=0. Wall time is dominated by model
-loading + forward pass, typically minutes per cell on a GPU.
+Wall time: dominated by model loading (~2s) + forward pass. Typically
+~8-12 sec/cell for small domains, up to ~50 sec for Environment.
 """
 
 from __future__ import annotations
