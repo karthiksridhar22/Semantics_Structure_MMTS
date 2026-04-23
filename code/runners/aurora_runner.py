@@ -1,0 +1,128 @@
+"""
+runners/aurora_runner.py
+========================
+
+Runs Aurora (pretrained, zero-shot) on a single (condition, seed, domain,
+pred_len) cell.
+
+Aurora specifics:
+* Zero-shot (--is_training 0): loads pretrained weights, no gradient step.
+* Per-domain seq_len varies — we default to the values from their reference
+  script but allow override via spec.seq_len.
+* Requires pretrained weights at --model_path. We check for them and fail
+  cleanly with a helpful message if absent.
+* C6 unimodal: we pass --no_text (added via patch) which makes the model
+  invoke text_features=None internally.
+
+Aurora is the simplest runner because training doesn't happen — we just
+invoke run_longExp.py with is_training=0. Wall time is dominated by model
+loading + forward pass, typically minutes per cell on a GPU.
+"""
+
+from __future__ import annotations
+
+import os
+import time
+from pathlib import Path
+
+from runners.common import (
+    RunSpec, RunResult, REPOS, PROJECT_ROOT,
+    resolve_data_path, parse_metrics_from_log,
+    run_subprocess, tail, now_utc,
+)
+
+AURORA_REPO = REPOS / 'Aurora' / 'TimeMMD'
+# Pretrained weights location. Can be overridden via env var AURORA_WEIGHTS.
+DEFAULT_WEIGHTS = os.environ.get('AURORA_WEIGHTS',
+                                 str(PROJECT_ROOT / 'weights' / 'aurora'))
+
+# Per-domain default settings from scripts/run_aurora_timemmd_zero_shot.sh.
+# Format: (seq_len, inference_token_len, batch_size, default_horizons)
+AURORA_DEFAULTS = {
+    'Agriculture':  (192,  48,  256, (6, 8, 10, 12)),
+    'Climate':      (192,  48,  256, (6, 8, 10, 12)),
+    'Economy':      (192,  48,  256, (6, 8, 10, 12)),
+    'Energy':       (1056, 48,  256, (12, 24, 36, 48)),
+    'Environment':  (528,  48,  256, (48, 96, 192, 336)),
+    'Health':       (96,   48,  256, (12, 24, 36, 48)),
+    'Security':     (220,  24,  256, (6, 8, 10, 12)),
+    'SocialGood':   (192,  48,  256, (6, 8, 10, 12)),
+    'Traffic':      (96,   48,  256, (6, 8, 10, 12)),
+}
+
+
+def run_aurora(spec: RunSpec) -> RunResult:
+    """Invoke Aurora on the specified cell. Returns a RunResult."""
+    result = RunResult(spec=spec, success=False, started_at_utc=now_utc(),
+                       working_dir=str(AURORA_REPO))
+    t0 = time.monotonic()
+
+    # Sanity: pretrained weights available?
+    weights = Path(DEFAULT_WEIGHTS)
+    if not weights.exists() or not any(weights.iterdir()):
+        result.error = (f'Aurora pretrained weights not found at {weights}. '
+                        f'Download from huggingface.co/DecisionIntelligence/Aurora '
+                        f'and place under that directory, or set AURORA_WEIGHTS env var.')
+        return result
+
+    # Resolve perturbed CSV location.
+    root_path, data_file = resolve_data_path(spec)
+    if not (root_path / data_file).exists():
+        result.error = f'perturbed CSV not found: {root_path / data_file}'
+        return result
+
+    # Defaults per-domain (can be overridden by spec).
+    if spec.domain not in AURORA_DEFAULTS:
+        result.error = f'no Aurora defaults for domain {spec.domain}'
+        return result
+    def_seq, def_itl, def_bs, _ = AURORA_DEFAULTS[spec.domain]
+    seq_len = spec.seq_len if spec.seq_len is not None else def_seq
+    inference_token_len = spec.extra_args.get('inference_token_len', def_itl)
+    batch_size = spec.extra_args.get('batch_size', def_bs)
+
+    # Build CLI.
+    cli = [
+        'python', 'run_longExp.py',
+        '--is_training', '0',                       # zero-shot
+        '--random_seed', str(spec.seed),
+        '--features', 'S',
+        '--seq_len', str(seq_len),
+        '--pred_len', str(spec.pred_len),
+        '--inference_token_len', str(inference_token_len),
+        '--batch_size', str(batch_size),
+        '--data', spec.domain,
+        '--data_path', data_file,
+        '--root_path', str(root_path),
+        '--model_path', str(weights),
+        '--gpu', os.environ.get('CUDA_VISIBLE_DEVICES', '0'),
+    ]
+    # C6 unimodal: add --no_text flag (requires our patch).
+    if spec.condition == 'C6_unimodal':
+        cli.append('--no_text')
+    result.cli_args = cli
+
+    # Run.
+    returncode, stdout, stderr = run_subprocess(
+        cli, cwd=AURORA_REPO,
+        timeout=spec.extra_args.get('timeout', 3600),
+    )
+    result.stdout_tail = tail(stdout, 60)
+    result.stderr_tail = tail(stderr, 60)
+
+    if returncode != 0:
+        result.error = f'process exited with code {returncode}'
+        result.wall_time_seconds = time.monotonic() - t0
+        return result
+
+    # Parse metrics.
+    combined = stdout + '\n' + stderr
+    metrics = parse_metrics_from_log(combined)
+    result.mse = metrics['mse']
+    result.mae = metrics['mae']
+    result.smape = metrics['smape']
+    result.success = (result.mse is not None and result.mae is not None)
+    if not result.success:
+        result.error = 'could not parse MSE/MAE from log'
+
+    result.wall_time_seconds = time.monotonic() - t0
+    return result
