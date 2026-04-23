@@ -43,7 +43,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-PROJECT_ROOT = Path('/home/claude/probe_project')
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_ROOT = PROJECT_ROOT / 'results'
 
 

@@ -80,7 +80,7 @@ import pandas as pd
 #  Paths & project constants
 # ============================================================================
 
-PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 REPOS_DIR = PROJECT_ROOT / 'repos'
 DATA_OUT_DIR = PROJECT_ROOT / 'data'
 
@@ -162,7 +162,7 @@ CONDITIONS = ['C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
 SEEDED_CONDITIONS = {'C3_shuffled'}
 
 C5_CONSTANT_STR = 'Time series data point.'
-C7_NULL_STR = '0'
+C7_NULL_STR = 'null'
 C8_ORACLE_HORIZON = 8   # how many future OT values to leak in the oracle text
 
 
@@ -460,14 +460,66 @@ class ManifestEntry:
     violations: list[str] = field(default_factory=list)
 
 
+# Columns we know should be numeric and MUST NOT contain empty strings
+# in the output CSVs. Some source CSVs (e.g. TaTS SocialGood) have sparse
+# empty values in these columns, which crash sklearn.StandardScaler at
+# runtime because our patched loaders read empty strings literally (due
+# to keep_default_na=False, which we need for the TEXT columns under C2).
+#
+# For numeric columns we want NaN, not "". The generator coerces empty
+# strings in these columns to NaN during load, so downstream pandas /
+# sklearn handle them natively.
+_KNOWN_NUMERIC_COLS = {
+    'OT', 'prior_history_avg', 'prior_history_std',
+    'his_avg_1', 'his_avg_2', 'his_avg_3', 'his_avg_4',
+    'his_avg_5', 'his_avg_6', 'his_avg_7',
+    'his_std_1', 'his_std_2', 'his_std_3', 'his_std_4',
+    'his_std_5', 'his_std_6', 'his_std_7',
+    'Exports', 'Imports',
+}
+
+
+def _coerce_numerics(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert known-numeric columns to proper floats, turning '' or
+    otherwise non-parseable values into NaN. We need this because
+    keep_default_na=False (needed for text columns under C2) otherwise
+    leaves stray empty strings in numeric columns.
+
+    Post-processing:
+    1. Drop any row where OT is NaN — these are non-data rows (e.g. future
+       dates where the target hasn't been published yet). SocialGood has 8
+       such rows at the end of 2024.
+    2. Forward-fill remaining NaN in other numeric columns (typical for
+       time-series priors that are undefined at the first few rows).
+    3. If forward-fill can't handle edge cases (e.g. leading NaN), fill 0.
+    """
+    for col in df.columns:
+        if col in _KNOWN_NUMERIC_COLS:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    if 'OT' in df.columns:
+        n_before = len(df)
+        df = df.dropna(subset=['OT']).reset_index(drop=True)
+        n_dropped = n_before - len(df)
+        if n_dropped > 0:
+            print(f'    [coerce] dropped {n_dropped} rows with NaN OT')
+    # For remaining numeric cols: forward-fill then backfill any leading
+    # NaN. Edge case: if still all NaN, zero-fill.
+    for col in df.columns:
+        if col in _KNOWN_NUMERIC_COLS and df[col].isna().any():
+            df[col] = df[col].ffill().bfill().fillna(0.0)
+    return df
+
+
 def _load_mmtsflib_csv(spec: DomainSpec) -> tuple[pd.DataFrame, Path]:
     src = MMTSFLIB_SRC / spec.mmtsflib_dir / spec.mmtsflib_file
-    return pd.read_csv(src), src
+    df = pd.read_csv(src)
+    return _coerce_numerics(df), src
 
 
 def _load_tats_csv(spec: DomainSpec) -> tuple[pd.DataFrame, Path]:
     src = TATS_SRC / spec.tats_file
-    return pd.read_csv(src), src
+    df = pd.read_csv(src)
+    return _coerce_numerics(df), src
 
 
 def generate_for_repo(repo_spec: RepoSpec,

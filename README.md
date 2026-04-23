@@ -86,14 +86,24 @@ conda deactivate
 
 **Note on the repo contradiction you may spot:** `repos/Aurora/TimeMMD/requirements.txt` lists `torch==1.11.0`. The top-level `repos/Aurora/README.md` says `torch==2.4.0 torchvision==0.19.0 transformers[torch]`. The latter is correct — the model code uses PyTorch 2.x features. The sub-folder `requirements.txt` is stale.
 
+**Known transformers compatibility issue:** Aurora was built against transformers 4.x. Transformers 5.0+ introduced a new internal API (`all_tied_weights_keys`) that custom models must implement, which Aurora doesn't. Without a version pin, pip installs the latest transformers (currently 5.x) and model loading crashes with `AttributeError: 'AuroraForPrediction' object has no attribute 'all_tied_weights_keys'`. Pin transformers below 5.0.
+
 ```bash
 conda create -y -n aurora python=3.10
 conda activate aurora
 pip install torch==2.4.0 torchvision==0.19.0 \
     --index-url https://download.pytorch.org/whl/cu121
-pip install "transformers[torch]" einops huggingface_hub \
-    numpy matplotlib pandas scikit-learn rarfile
+pip install "transformers>=4.40,<5.0" "tokenizers<0.21" \
+    einops huggingface_hub numpy matplotlib pandas scikit-learn rarfile "accelerate<1.0"
 conda deactivate
+```
+
+**If you already created the aurora env with transformers 5.x** (and hit the AttributeError), fix in place:
+
+```bash
+conda activate aurora
+pip install "transformers>=4.40,<5.0" "tokenizers<0.21" "accelerate<1.0" --force-reinstall
+python -c "import transformers; print(transformers.__version__)"   # should be 4.x
 ```
 
 ### CUDA note

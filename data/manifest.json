@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-23T14:06:34.248040+00:00",
+  "generated_at_utc": "2026-04-23T18:52:41.642654+00:00",
   "project_root": "/home/karthik/Semantics_Structure_MMTS",
   "total_files": 162,
   "clean_files": 162,
@@ -142,7 +142,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C1_original/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -291,7 +291,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C2_empty/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -430,7 +430,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C3_shuffled/seed2021/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -565,7 +565,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C3_shuffled/seed2022/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -700,7 +700,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C3_shuffled/seed2023/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -835,7 +835,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C4_crossdomain/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -984,7 +984,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C5_constant/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -1137,7 +1137,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C7_null/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -1276,7 +1276,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/MM-TSFlib/data/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/mmtsflib/C8_oracle/seed0/SocialGood/Unadj_UnemploymentRate_ALL_processed.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "Final_Search_4"
       ],
@@ -1411,7 +1411,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C1_original/seed0/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -1560,7 +1560,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C2_empty/seed0/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -1699,7 +1699,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C3_shuffled/seed2021/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -1834,7 +1834,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C3_shuffled/seed2022/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -1969,7 +1969,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C3_shuffled/seed2023/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -2104,7 +2104,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C4_crossdomain/seed0/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -2253,7 +2253,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C5_constant/seed0/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -2406,7 +2406,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C7_null/seed0/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],
@@ -2545,7 +2545,7 @@
       "domain": "SocialGood",
       "src_file": "/home/karthik/Semantics_Structure_MMTS/repos/TaTS/data/SocialGood.csv",
       "out_file": "/home/karthik/Semantics_Structure_MMTS/data/tats/C8_oracle/seed0/SocialGood.csv",
-      "n_rows": 900,
+      "n_rows": 892,
       "text_cols_perturbed": [
         "fact"
       ],

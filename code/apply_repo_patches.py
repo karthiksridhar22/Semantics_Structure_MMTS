@@ -35,7 +35,8 @@ import shutil
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
+# Resolve project root dynamically so this works on any box
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 REPOS = PROJECT_ROOT / 'repos'
 
 
@@ -64,17 +65,17 @@ def _mm_tsflib_patches() -> list:
 
 
 def _tats_patches() -> list:
+    target = REPOS / 'TaTS'
     return [
-        (REPOS / 'TaTS' / 'data_provider' / 'data_loader.py',
+        (target / 'data_provider' / 'data_loader.py',
          [
-             # Patch 1: read_csv
+             # Patch 1: read_csv with keep_default_na=False
              ('df_raw = pd.read_csv(os.path.join(self.root_path,\n'
               '                                          self.data_path))',
               'df_raw = pd.read_csv(os.path.join(self.root_path,\n'
               '                                          self.data_path),\n'
               '                             keep_default_na=False)  ' + MARKER),
-             # Patch 2: disable the 'No information available' replacement so
-             # our literal '' passes through untouched. Idempotent via marker.
+             # Patch 2: same NaN-replacement-with-sentinel fix
              ("        for i in range(len(self.text)):\n"
               "            if pd.isnull(self.text[i][0]):\n"
               "                self.text[i][0] = 'No information available'",
@@ -87,6 +88,32 @@ def _tats_patches() -> list:
              # Patch 3: pandas>=2.0 API fix for df.drop
              ("data_stamp = df_stamp.drop(['date'], 1).values",
               "data_stamp = df_stamp.drop(columns=['date']).values  " + MARKER),
+         ]),
+        # Patch 4 (NEW): register additional backbones in exp_basic model_dict.
+        # TaTS ships 9 model files under models/ but only registers iTransformer
+        # in exp_basic.py's self.model_dict. We register the rest so our
+        # multi-backbone sweep can actually use them. This is a non-semantic
+        # change: each Model class is already fully implemented; we just wire
+        # them into the dispatcher.
+        (target / 'exp' / 'exp_basic.py',
+         [
+             ("from models import iTransformer",
+              "from models import (iTransformer, Autoformer, DLinear, FEDformer,\n"
+              "                    FiLM, Informer, PatchTST, Transformer, Crossformer)  " + MARKER),
+             ("        self.model_dict = {\n"
+              "            'iTransformer': iTransformer\n"
+              "        }",
+              "        self.model_dict = {  " + MARKER + "\n"
+              "            'iTransformer': iTransformer,\n"
+              "            'Autoformer': Autoformer,\n"
+              "            'DLinear': DLinear,\n"
+              "            'FEDformer': FEDformer,\n"
+              "            'FiLM': FiLM,\n"
+              "            'Informer': Informer,\n"
+              "            'PatchTST': PatchTST,\n"
+              "            'Transformer': Transformer,\n"
+              "            'Crossformer': Crossformer,\n"
+              "        }"),
          ]),
     ]
 
@@ -156,25 +183,24 @@ def apply(path: Path, edits: list[tuple[str, str]]) -> tuple[str, int]:
     skipped = 0
     errors = []
     for (old, new) in edits:
-        if old in content:
-            # Pattern present — apply.
-            content = content.replace(old, new)
+        # Check BEFORE applying: is this patch already applied? Some patches
+        # have `new` that CONTAINS `old` (e.g. "insert a line after X"
+        # preserves X). In such cases `old in content` is True even after
+        # application. So always check the fingerprint first.
+        if MARKER in new:
+            mpos = new.find(MARKER)
+            fp = new[mpos:mpos + len(MARKER) + 50]
+        else:
+            fp = new[:80]
+
+        if fp in content:
+            skipped += 1
+        elif old in content:
+            content = content.replace(old, new, 1)   # FIRST occurrence only
             applied += 1
         else:
-            # Pattern absent — either already applied, or never relevant.
-            # Use a distinctive slice from `new` as the fingerprint: prefer
-            # chars AFTER the MARKER (if MARKER is in new) or just a slice
-            # of `new`.
-            if MARKER in new:
-                mpos = new.find(MARKER)
-                fp = new[mpos:mpos + len(MARKER) + 50]  # longer, more specific
-            else:
-                fp = new[:80]
-            if fp in content:
-                skipped += 1
-            else:
-                errors.append(f'pattern not found and no fingerprint match: '
-                              f'{old[:60]!r}')
+            errors.append(f'pattern not found and no fingerprint match: '
+                          f'{old[:60]!r}')
 
     if errors:
         return (f'  [error] {path}: ' + '; '.join(errors), applied)

@@ -1,0 +1,11 @@
+nohup: ignoring input
+usage: run_experiments.py [-h]
+                          [--models {aurora,tats,mmtsflib} [{aurora,tats,mmtsflib} ...]]
+                          [--conditions {C1_original,C2_empty,C3_shuffled,C4_crossdomain,C5_constant,C6_unimodal,C7_null,C8_oracle} [{C1_original,C2_empty,C3_shuffled,C4_crossdomain,C5_constant,C6_unimodal,C7_null,C8_oracle} ...]]
+                          [--domains {Agriculture,Climate,Economy,Energy,Environment,Health,Security,SocialGood,Traffic} [{Agriculture,Climate,Economy,Energy,Environment,Health,Security,SocialGood,Traffic} ...]]
+                          [--pred_lens PRED_LENS [PRED_LENS ...]]
+                          [--seeds SEEDS [SEEDS ...]]
+                          [--backbones BACKBONES [BACKBONES ...]]
+                          [--all_backbones] [--dry_run] [--force]
+                          [--stop_on_error]
+run_experiments.py: error: argument --seeds: invalid int value: ' '

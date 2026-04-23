@@ -117,7 +117,7 @@ def _asdict_nested(obj):
 #  Paths
 # =============================================================================
 
-PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 REPOS = PROJECT_ROOT / 'repos'
 DATA_ROOT = PROJECT_ROOT / 'data'
 RESULTS_ROOT = PROJECT_ROOT / 'results'

@@ -35,12 +35,12 @@ from runners.common import (
 
 TATS_REPO = REPOS / 'TaTS'
 
-# All backbones available in TaTS/models/.
-# Each cell's backbone is controlled by spec.extra_args['backbone']. Default
-# = iTransformer (main_forecast.sh's choice).
+# All backbones registered in TaTS/exp/exp_basic.py AFTER our patch.
+# The original TaTS ships only iTransformer in model_dict; our patch adds
+# the rest. If patches aren't applied, only iTransformer will work.
 TATS_ALL_BACKBONES = [
-    'iTransformer', 'Autoformer', 'Transformer', 'DLinear',
-    'FEDformer', 'Informer', 'PatchTST', 'Crossformer', 'FiLM',
+    'iTransformer', 'Autoformer', 'DLinear', 'FEDformer',
+    'FiLM', 'Informer', 'PatchTST', 'Transformer', 'Crossformer',
 ]
 DEFAULT_BACKBONE = 'iTransformer'
 
