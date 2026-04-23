@@ -15,13 +15,6 @@ Why this matters: when we later aggregate 378+ runs into tables and
 plots, they're all the same shape — makes paired bootstrap / stats
 trivial instead of bespoke-per-model.
 
-TEACHING NOTE
--------------
-This design follows the "strong typing, weak dispatch" pattern common
-in ML research infra. All the variability lives in the RunSpec
-(what we're running), not in the runner's call signature. This makes
-it easy to add new conditions, seeds, or even new models later without
-changing the orchestrator.
 """
 
 from __future__ import annotations
@@ -104,7 +97,7 @@ def _asdict_nested(obj):
 #  Paths
 # =============================================================================
 
-PROJECT_ROOT = Path('/home/claude/probe_project')
+PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
 REPOS = PROJECT_ROOT / 'repos'
 DATA_ROOT = PROJECT_ROOT / 'data'
 RESULTS_ROOT = PROJECT_ROOT / 'results'
@@ -147,27 +140,38 @@ DOMAIN_FILE_MAP = {
 }
 
 
+# Conditions whose CSV contents are the same regardless of seed. These are
+# stored on disk under a sentinel seed=0 path. The runner's RunSpec.seed
+# still controls the MODEL's RNG (weight init, dropout, etc); only the CSV
+# location is deduplicated.
+_SEEDED_DATA_CONDITIONS = {'C3_shuffled', 'C4_crossdomain'}
+
+
 def resolve_data_path(spec: RunSpec) -> tuple[Path, str]:
     """Return (root_path, data_filename) for this spec.
 
     The runner passes these to the model's CLI as --root_path and --data_path.
-    This function implements the mapping: which of our 378 perturbation
-    CSVs corresponds to this cell?
+    This function implements the mapping: which of our perturbation CSVs
+    corresponds to this cell?
 
-    SPECIAL CASE: C6_unimodal has no pre-generated CSV — it's a CLI-flag
-    condition that uses C1_original data plus an unimodal flag. So we
-    substitute C1_original's data path here. The runner is responsible
-    for setting the appropriate CLI flag (e.g. --no_text for Aurora).
+    SPECIAL CASE 1: C6_unimodal has no pre-generated CSV — it's a CLI-flag
+    condition that uses C1_original data plus an unimodal flag.
+
+    SPECIAL CASE 2: Non-seeded conditions (C1/C2/C5/C7/C8) are stored under
+    seed0/ since their content doesn't depend on the seed. We look there
+    regardless of the RunSpec's seed.
     """
     condition = 'C1_original' if spec.condition == 'C6_unimodal' else spec.condition
+    # Data-location seed: only C3/C4 actually vary with seed
+    data_seed = spec.seed if condition in _SEEDED_DATA_CONDITIONS else 0
 
     if spec.model == 'mmtsflib':
         subdir, filename = DOMAIN_FILE_MAP[spec.domain]['mmtsflib']
-        root = DATA_ROOT / 'mmtsflib' / condition / f'seed{spec.seed}' / subdir
+        root = DATA_ROOT / 'mmtsflib' / condition / f'seed{data_seed}' / subdir
         return root, filename
     elif spec.model in ('tats', 'aurora'):
         filename = DOMAIN_FILE_MAP[spec.domain]['tats']
-        root = DATA_ROOT / 'tats' / condition / f'seed{spec.seed}'
+        root = DATA_ROOT / 'tats' / condition / f'seed{data_seed}'
         return root, filename
     raise ValueError(f'unknown model: {spec.model}')
 

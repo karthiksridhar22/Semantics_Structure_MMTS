@@ -80,7 +80,7 @@ import pandas as pd
 #  Paths & project constants
 # ============================================================================
 
-PROJECT_ROOT = Path('/home/claude/probe_project')
+PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
 REPOS_DIR = PROJECT_ROOT / 'repos'
 DATA_OUT_DIR = PROJECT_ROOT / 'data'
 
@@ -152,6 +152,10 @@ SEEDS = {
 CONDITIONS = ['C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
               'C5_constant', 'C7_null', 'C8_oracle']
 # C6 absent by design — triggered via CLI at run-time.
+
+# Conditions whose CSV content depends on the seed (i.e. use an RNG).
+# Other conditions produce byte-identical CSVs across seeds — we write them once.
+SEEDED_CONDITIONS = {'C3_shuffled', 'C4_crossdomain'}
 
 C5_CONSTANT_STR = 'Time series data point.'
 C7_NULL_STR = '0'
@@ -241,10 +245,17 @@ def c3_shuffled(df: pd.DataFrame, text_cols, seed, **_) -> pd.DataFrame:
 
 def c4_crossdomain(df: pd.DataFrame, paired_df: pd.DataFrame, text_cols,
                    seed, **_) -> pd.DataFrame:
-    """C4: replace text with paired domain's text, cycled to length, shuffled.
+    """C4: replace text with paired domain's text, cycled to length, then shuffled.
 
-    If lengths differ, we tile the source column to >= target length then
-    truncate. Then we shuffle (same seed-based permutation as C3 would).
+    The 'cycle' step is deterministic: if paired domain has fewer rows than
+    target, we tile (repeat) to reach target length; if it has more, we
+    truncate. No randomness here — this step just equalizes lengths.
+
+    The shuffle AFTER cycling is the seed-dependent step. Without shuffling,
+    tiled positions would be correlated with the target's row index (e.g. if
+    paired domain has exactly half our rows, row N and row N+half would have
+    identical tiled text), which could create spurious artifacts.
+
     For Environment (self-paired), behavior equals C3.
     """
     out = df.copy()
@@ -450,7 +461,14 @@ def generate_for_repo(repo_spec: RepoSpec,
     numeric_cols = repo_spec.null_numeric_cols
 
     for condition in CONDITIONS:
-        for seed in seeds:
+        # Non-seeded conditions (C1/C2/C5/C7/C8) produce byte-identical CSVs
+        # regardless of seed, so we only write them once. We use a sentinel
+        # seed=0 for their on-disk path; the runner substitutes this path
+        # regardless of the RunSpec's model-RNG seed.
+        is_seeded = condition in SEEDED_CONDITIONS
+        condition_seeds = seeds if is_seeded else [0]
+
+        for seed in condition_seeds:
             for spec in DOMAINS:
                 if spec.canonical not in loaded:
                     continue

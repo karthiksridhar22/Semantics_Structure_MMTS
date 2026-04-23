@@ -35,7 +35,7 @@ import shutil
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path('/home/claude/probe_project')
+PROJECT_ROOT = Path('/home/karthik/Semantics_Structure_MMTS')
 REPOS = PROJECT_ROOT / 'repos'
 
 
