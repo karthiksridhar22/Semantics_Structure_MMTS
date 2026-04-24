@@ -7,3 +7,17 @@ data/tats/
 *.probe_backup
 __pycache__/
 *.pyc 
+
+results/
+logs/
+weights/
+sweep_log.jsonl
+nohup_*.log
+data/mmtsflib/
+data/tats/
+data/manifest.json
+repos/*/checkpoints/
+*.probe_backup
+__pycache__/
+*.pyc
+.DS_Store
