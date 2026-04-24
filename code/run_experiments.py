@@ -238,6 +238,24 @@ def main():
     ap.add_argument('--all_backbones', action='store_true',
                     help='Run every backbone available in each repo. '
                          'Overrides --backbones.')
+    ap.add_argument('--shard_id', type=int, default=0,
+                    help='Which shard of the grid this worker handles '
+                         '(0-indexed). Use with --num_shards to run '
+                         'multiple orchestrators in parallel, each on a '
+                         'disjoint subset of cells.')
+    ap.add_argument('--num_shards', type=int, default=1,
+                    help='Total number of shards. Each cell goes to shard '
+                         '(cell_idx % num_shards). Default 1 = no sharding.')
+    ap.add_argument('--batch_size', type=int, default=None,
+                    help='Override batch size for TaTS and MM-TSFlib. '
+                         'Default: 32 (runners\' internal default). '
+                         'Use smaller (e.g. 16) if you hit OOM; larger '
+                         '(e.g. 64, 128) if your GPU has more headroom.')
+    ap.add_argument('--preserve_checkpoints', action='store_true',
+                    help='Keep trained model checkpoints on disk. Default: '
+                         'delete after each cell. ~60-170 MB/cell × 15k+ '
+                         'cells = >1 TB if kept. Enable only for a small '
+                         'subset you plan to probe later.')
     ap.add_argument('--dry_run', action='store_true',
                     help='Print planned grid without executing')
     ap.add_argument('--force', action='store_true',
@@ -277,10 +295,29 @@ def main():
     # IF we special-case resolve_data_path... let me fix that by rewriting
     # spec.condition JUST for data path resolution.
 
+    extra_args = {}
+    if args.batch_size is not None:
+        extra_args['batch_size'] = args.batch_size
+    if args.preserve_checkpoints:
+        extra_args['preserve_checkpoints'] = True
+
     specs = build_specs(args.models, args.conditions, seeds_per_model,
                         args.domains, args.pred_lens,
                         backbones_per_model,
+                        extra_args=extra_args,
                         use_time_mmd_preset=(args.preset == 'time_mmd'))
+
+    # Apply sharding: keep only cells whose index modulo num_shards equals
+    # shard_id. This lets N workers run in parallel on disjoint subsets of
+    # the grid. We shard AFTER build_specs so all workers agree on the
+    # global cell order (deterministic) before partitioning.
+    if args.num_shards > 1:
+        if not (0 <= args.shard_id < args.num_shards):
+            raise ValueError(f'--shard_id must be in [0, {args.num_shards})')
+        specs = [s for i, s in enumerate(specs)
+                 if i % args.num_shards == args.shard_id]
+        print(f'Shard {args.shard_id}/{args.num_shards}: '
+              f'handling {len(specs)} cells of the global grid')
 
     if args.dry_run:
         print(f'Grid size: {len(specs)} cells')

@@ -79,6 +79,17 @@ def run_tats(spec: RunSpec) -> RunResult:
     patience = spec.extra_args.get('patience', 5)
     llm_model = spec.extra_args.get('llm_model', 'GPT2')
     hug_token = spec.extra_args.get('huggingface_token', 'NA')
+    # Batch size: default 32 (the repo's own default; matches your pre-existing
+    # runs). Overridable via --batch_size on the orchestrator. When sharding
+    # with multiple shards, keeping bs=32 avoids OOM since each shard needs
+    # its own activation memory.
+    #
+    # num_workers: we DO NOT pass --num_workers to TaTS, so the repo default
+    # (10) is used. Overriding num_workers changes the DataLoader worker
+    # seeding, which shifts batches in the first few epochs even with the
+    # same torch.manual_seed. Keeping the default preserves bit-level
+    # compatibility with your pre-existing completed cells.
+    batch_size = spec.extra_args.get('batch_size', 32)
 
     # C6 unimodal operationalization: zero text_emb and prior_weight.
     # Both are necessary: text_emb=0 makes enc_in=dec_in=1 (univariate backbone),
@@ -115,6 +126,7 @@ def run_tats(spec: RunSpec) -> RunResult:
         '--huggingface_token', hug_token,
         '--train_epochs', str(train_epochs),
         '--patience', str(patience),
+        '--batch_size', str(batch_size),
     ]
     result.cli_args = cli
 
@@ -135,13 +147,28 @@ def run_tats(spec: RunSpec) -> RunResult:
     # Record the setting string (from stdout) so we can find the saved
     # checkpoint later for probing. TaTS training always writes
     # checkpoints to <repo>/checkpoints/<setting>/checkpoint.pth.
-    import re
+    import re, shutil
     m = re.search(r'>>>>>>>start training : ([^>]+)>>>', stdout)
+    setting_dir = None
     if m:
         setting = m.group(1).strip()
         ckpt_path = TATS_REPO / 'checkpoints' / setting / 'checkpoint.pth'
+        setting_dir = TATS_REPO / 'checkpoints' / setting
         result.extra['checkpoint_path'] = str(ckpt_path)
         result.extra['training_setting'] = setting
+
+    # Checkpoint cleanup. At ~60-170 MB per checkpoint and 7000+ cells,
+    # keeping everything would need >1 TB. Default is to delete after each
+    # cell. Pass --preserve_checkpoints on the orchestrator to keep them
+    # (necessary if you plan to probe the trained models).
+    preserve_ckpt = spec.extra_args.get('preserve_checkpoints', False)
+    if setting_dir is not None and not preserve_ckpt:
+        try:
+            if setting_dir.exists():
+                shutil.rmtree(setting_dir)
+            result.extra['checkpoint_cleaned'] = True
+        except Exception as e:
+            result.extra['checkpoint_cleanup_error'] = str(e)
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

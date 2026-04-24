@@ -83,6 +83,11 @@ def run_mmtsflib(spec: RunSpec) -> RunResult:
     llm_model = spec.extra_args.get('llm_model', 'BERT')
     train_epochs = spec.extra_args.get('train_epochs', 10)
     patience = spec.extra_args.get('patience', 3)
+    # Batch size: default 32 (the repo's own default; matches your pre-existing
+    # runs). Overridable via --batch_size on the orchestrator.
+    # We DO NOT pass --num_workers so the repo default (10) is used, preserving
+    # bit-level compatibility with pre-existing completed cells.
+    batch_size = spec.extra_args.get('batch_size', 32)
 
     # C6 operationalization: prompt_weight=0.
     if spec.condition == 'C6_unimodal':
@@ -112,6 +117,7 @@ def run_mmtsflib(spec: RunSpec) -> RunResult:
         '--seed', str(spec.seed),
         '--train_epochs', str(train_epochs),
         '--patience', str(patience),
+        '--batch_size', str(batch_size),
         '--des', 'Exp',
     ]
     result.cli_args = cli
@@ -132,13 +138,26 @@ def run_mmtsflib(spec: RunSpec) -> RunResult:
 
     # Record the setting/checkpoint path so we can probe the trained model
     # later. MM-TSFlib writes checkpoints to <repo>/checkpoints/<setting>/.
-    import re
+    import re, shutil
     m = re.search(r'>>>>>>>start training : ([^>]+)>>>', stdout)
+    setting_dir = None
     if m:
         setting = m.group(1).strip()
         ckpt_path = MMTSFLIB_REPO / 'checkpoints' / setting / 'checkpoint.pth'
+        setting_dir = MMTSFLIB_REPO / 'checkpoints' / setting
         result.extra['checkpoint_path'] = str(ckpt_path)
         result.extra['training_setting'] = setting
+
+    # Checkpoint cleanup — default is to delete (saving all cells' ckpts
+    # would exceed 1 TB). Pass --preserve_checkpoints to keep.
+    preserve_ckpt = spec.extra_args.get('preserve_checkpoints', False)
+    if setting_dir is not None and not preserve_ckpt:
+        try:
+            if setting_dir.exists():
+                shutil.rmtree(setting_dir)
+            result.extra['checkpoint_cleaned'] = True
+        except Exception as e:
+            result.extra['checkpoint_cleanup_error'] = str(e)
 
     if returncode != 0:
         result.error = f'process exited with code {returncode}'

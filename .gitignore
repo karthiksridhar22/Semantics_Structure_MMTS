@@ -1,1 +1,9 @@
 weights/aurora
+repos/*/checkpoints/
+logs/
+weights/
+data/mmtsflib/
+data/tats/
+*.probe_backup
+__pycache__/
+*.pyc 
