@@ -8,6 +8,8 @@ data/tats/
 __pycache__/
 *.pyc 
 
+repos/
+
 results/
 logs/
 weights/
@@ -21,3 +23,9 @@ repos/*/checkpoints/
 __pycache__/
 *.pyc
 .DS_Store
+
+results
+summaries
+tables
+results_backup
+results/tats
