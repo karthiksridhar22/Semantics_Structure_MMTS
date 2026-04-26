@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2022,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.007889853460559001,
+  "gradnorm_std": 0.012288011276590833,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9735628167788187,
+  "attn_max_weight_mean": 0.1622999757528305,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.028745967894792557,
+  "divergence_max_sq": 0.0816611796617508,
+  "divergence_n_samples": 10
+}

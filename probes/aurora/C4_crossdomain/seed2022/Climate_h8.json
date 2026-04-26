@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2022,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.0016964939422905445,
+  "gradnorm_std": 0.0015148928752392605,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9875526626904806,
+  "attn_max_weight_mean": 0.1421434978644053,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.022358495742082596,
+  "divergence_max_sq": 0.03519125282764435,
+  "divergence_n_samples": 10
+}

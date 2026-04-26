@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2022,
+  "domain": "SocialGood",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.018230311882992584,
+  "gradnorm_std": 0.0138477530740507,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9687002897262573,
+  "attn_max_weight_mean": 0.16371706128120422,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.06449762731790543,
+  "divergence_max_sq": 0.2350521832704544,
+  "divergence_n_samples": 10
+}

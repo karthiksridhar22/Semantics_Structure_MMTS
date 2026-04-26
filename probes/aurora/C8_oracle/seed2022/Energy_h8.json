@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2022,
+  "domain": "Energy",
+  "pred_len": 8,
+  "seq_len": 1056,
+  "gradnorm_mean": 0.037092440955651305,
+  "gradnorm_std": 0.031846504989900985,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9658523400624593,
+  "attn_max_weight_mean": 0.1692618578672409,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.08694930374622345,
+  "divergence_max_sq": 0.3487183451652527,
+  "divergence_n_samples": 10
+}

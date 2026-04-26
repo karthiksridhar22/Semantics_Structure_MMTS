@@ -1,0 +1,16 @@
+{
+  "condition": "C2_empty",
+  "seed": 2021,
+  "domain": "SocialGood",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.024970090948045254,
+  "gradnorm_std": 0.02093549758496909,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9683099786440531,
+  "attn_max_weight_mean": 0.16401629646619162,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.16460387408733368,
+  "divergence_max_sq": 1.2101762294769287,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C1_original",
+  "seed": 2021,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.008886258108153319,
+  "gradnorm_std": 0.01370411939913546,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9872737924257914,
+  "attn_max_weight_mean": 0.14260881145795187,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.019464999437332153,
+  "divergence_max_sq": 0.035876430571079254,
+  "divergence_n_samples": 10
+}

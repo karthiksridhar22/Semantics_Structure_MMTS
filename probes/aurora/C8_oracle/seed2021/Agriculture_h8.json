@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2021,
+  "domain": "Agriculture",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.22935759524504343,
+  "gradnorm_std": 0.218643973354326,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9673385421435038,
+  "attn_max_weight_mean": 0.17365533113479614,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.02159232273697853,
+  "divergence_max_sq": 0.10941308736801147,
+  "divergence_n_samples": 10
+}

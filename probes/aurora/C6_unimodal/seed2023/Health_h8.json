@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2023,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.2575527138930435,
+  "gradnorm_std": 0.4445462548335789,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9730555415153503,
+  "attn_max_weight_mean": 0.16309641301631927,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.03794991970062256,
+  "divergence_max_sq": 0.1377263367176056,
+  "divergence_n_samples": 10
+}

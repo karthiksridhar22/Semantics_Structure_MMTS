@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2022,
+  "domain": "Security",
+  "pred_len": 8,
+  "seq_len": 220,
+  "gradnorm_mean": 0.09041029959917068,
+  "gradnorm_std": 0.04560386297737766,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9824856917063395,
+  "attn_max_weight_mean": 0.14634690682093301,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.05352598428726196,
+  "divergence_max_sq": 0.13916601240634918,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2021,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.0071643684059381485,
+  "gradnorm_std": 0.004937943581203477,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9827954173088074,
+  "attn_max_weight_mean": 0.150661438703537,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.005263608880341053,
+  "divergence_max_sq": 0.023233313113451004,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2023,
+  "domain": "Energy",
+  "pred_len": 8,
+  "seq_len": 1056,
+  "gradnorm_mean": 0.04786473233252764,
+  "gradnorm_std": 0.036166816441359294,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9645745158195496,
+  "attn_max_weight_mean": 0.17140490810076395,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.03216751292347908,
+  "divergence_max_sq": 0.08635194599628448,
+  "divergence_n_samples": 10
+}

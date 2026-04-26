@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2021,
+  "domain": "SocialGood",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.011943618611743053,
+  "gradnorm_std": 0.005698650338681685,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9694768389066061,
+  "attn_max_weight_mean": 0.16223362584908804,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.07107507437467575,
+  "divergence_max_sq": 0.1308983564376831,
+  "divergence_n_samples": 10
+}

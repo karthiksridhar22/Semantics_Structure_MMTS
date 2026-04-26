@@ -91,18 +91,83 @@ AURORA_DEFAULTS = {
 
 
 # =============================================================================
+#  Aurora-internal accessors — handle path variations safely
+# =============================================================================
+#
+# AuroraForPrediction wraps an inner AuroraModel as `self.model`. The text
+# components (TextEncoder + TextGuider) live on that inner model, NOT on the
+# outer AuroraForPrediction. Earlier versions of this file accessed them as
+# `model.TextEncoder` directly, which raised AttributeError. These helpers
+# walk plausible paths and return the right submodule, or raise a clear
+# error listing what we tried — so any future Aurora rewrap is easy to fix.
+
+def _find_text_encoder(aurora_for_prediction):
+    """Returns the TextEncoder module."""
+    candidates = [
+        ('model.TextEncoder', lambda m: m.model.TextEncoder),
+        ('TextEncoder',       lambda m: m.TextEncoder),
+    ]
+    return _try_paths(aurora_for_prediction, candidates, 'TextEncoder')
+
+
+def _find_text_guider(aurora_for_prediction):
+    """Returns the TextGuider (cross-attention) module."""
+    candidates = [
+        ('model.TextGuider', lambda m: m.model.TextGuider),
+        ('TextGuider',       lambda m: m.TextGuider),
+    ]
+    return _try_paths(aurora_for_prediction, candidates, 'TextGuider')
+
+
+def _try_paths(obj, candidates, label):
+    last = None
+    for desc, fn in candidates:
+        try:
+            return fn(obj)
+        except AttributeError as e:
+            last = (desc, e)
+            continue
+    tried = ', '.join(d for d, _ in candidates)
+    raise AttributeError(
+        f"Could not locate Aurora's {label} via any of: [{tried}]. "
+        f"Last error at '{last[0]}': {last[1]}"
+    )
+
+
+# =============================================================================
 #  Hook containers — minimal, self-contained
 # =============================================================================
 
 class GradNormProbe:
-    """Probe A: L2-norm of grad at text-encoder input embeddings.
+    """Probe A: L2-norm of grad at Aurora's text-encoder OUTPUT
+    (the distilled `output_tokens` of shape [B, num_distill, hidden]).
+
+    IMPORTANT — why we hook the encoder *output*, not BERT's input
+    embeddings: in Aurora, BERT's parameters are frozen with
+    `param.requires_grad = False`. The output tensor of BERT's
+    `embeddings.word_embeddings` therefore has `requires_grad = False`
+    (no live gradient path exists *into* a frozen-only subgraph from
+    here — gradients are only routed through tensors that are upstream
+    of trainable parameters). Hooking there yields no gradients.
+
+    Aurora's TextEncoder.forward additionally applies `self.projection`
+    (trainable) and `self.cross_text` (trainable Transformer decoder
+    that distills BERT's per-token features into `num_distill=10`
+    tokens via cross-attention). Hooking the *output* of TextEncoder
+    sits right above this trainable stack, so the captured tensor's
+    .grad is non-zero whenever loss depends on text — i.e. exactly
+    what we want to measure.
+
+    Operationally, .grad ≈ 0 at this hook point means the model treats
+    the text-distilled tokens as pass-through noise; .grad >> 0 means
+    the model is sensitive to text features.
 
     Usage:
         probe = GradNormProbe()
-        probe.attach(model.TextEncoder.model.embeddings.word_embeddings)
-        ...forward pass + backward()...
-        probe.record()    # pulls .grad from retained tensor
-        probe.detach()    # removes the hook
+        probe.attach(<TextEncoder>)
+        ...forward + backward()...
+        probe.record()
+        probe.detach()
         stats = probe.summary()
     """
     def __init__(self):
@@ -160,11 +225,25 @@ class AttentionProbe:
         try:
             if not (isinstance(output, tuple) and len(output) >= 2):
                 return
-            attn = output[1]
-            if attn is None or not torch.is_tensor(attn):
+            attn_scores = output[1]
+            if attn_scores is None or not torch.is_tensor(attn_scores):
                 return
-            attn = attn.detach().float()
+            # Aurora's AuroraAttention returns the *pre-softmax* scaled
+            # dot-product scores as `output[1]`, NOT the softmax weights.
+            # We must softmax over the key dimension before any entropy
+            # / max-weight computation. Variable name in the upstream code
+            # is misleading; this was a real bug in earlier probe runs.
+            attn_logits = attn_scores.detach().float()
+            attn = torch.softmax(attn_logits, dim=-1)
             L_k = attn.shape[-1]
+            if L_k <= 1:
+                # Degenerate: 1-key attention has zero entropy and log(1) = 0,
+                # so the normalized entropy is undefined. Record a flag.
+                self.stats.append({
+                    'attn_error': f'degenerate L_k={L_k}',
+                    'attn_L_k': int(L_k),
+                })
+                return
             # Shannon entropy over the key (text-token) dimension; mean
             # across heads, queries, batch. Normalised by log(L_k) so 1.0
             # means uniform (model attends to all tokens equally).
@@ -176,7 +255,7 @@ class AttentionProbe:
             self.stats.append({
                 'attn_entropy_rel_uniform': entropy_rel,
                 'attn_max_weight': max_w,
-                'attn_L_k': L_k,
+                'attn_L_k': int(L_k),
             })
         except Exception as e:
             self.stats.append({'attn_error': f'{type(e).__name__}: {e}'})
@@ -207,9 +286,10 @@ class AttentionProbe:
 #  Aurora-specific data path resolution
 # =============================================================================
 
-# Non-seeded conditions live under seed0/
+# Non-seeded conditions live under seed0/ on disk. The orchestrator and
+# probe both rewrite seed -> 0 for these so all RNG seeds read the same CSV.
 NON_SEEDED = {'C1_original', 'C2_empty', 'C5_constant', 'C7_null', 'C8_oracle',
-              'C4_crossdomain', 'C6_unimodal'}
+              'C4_crossdomain', 'C6_unimodal', 'C9_zero_priors'}
 
 
 def resolve_data_path(condition, seed, domain):
@@ -309,19 +389,18 @@ def probe_one_cell(condition, seed, domain, pred_len,
         gn = GradNormProbe() if do_gradnorm else None
         ab = AttentionProbe() if do_attention else None
 
-        # Hook points (Aurora's architecture):
-        #   Probe A: TextEncoder.model.embeddings.word_embeddings
-        #   Probe B: TextGuider (an AuroraAttention)
+        # Hook points (Aurora's architecture, validated against repo source):
+        #   Probe A: TextEncoder module — hook captures its OUTPUT tensor
+        #            (shape [B, num_distill, hidden]). Gradients flow into
+        #            this tensor via the trainable projection + cross_text
+        #            inside TextEncoder, and downstream via TextGuider.
+        #   Probe B: TextGuider (an AuroraAttention) — hook captures the
+        #            pre-softmax attention scores; we softmax inside the probe.
         try:
             if gn:
-                # Aurora's TextEncoder wraps an HF model; word_embeddings is the
-                # first learnable layer in the text path.
-                te = model.TextEncoder.model
-                # The HF model exposes get_input_embeddings() consistently
-                emb = te.get_input_embeddings()
-                gn.attach(emb)
+                gn.attach(_find_text_encoder(model))
             if ab:
-                ab.attach(model.TextGuider)
+                ab.attach(_find_text_guider(model))
         except Exception as e:
             out['hook_attach_error'] = f'{type(e).__name__}: {e}'
 
@@ -344,9 +423,20 @@ def probe_one_cell(condition, seed, domain, pred_len,
                     text_input_ids=tids_r,
                     text_attention_mask=amask_r,
                     text_token_type_ids=ttids_r,
+                    # Aurora's forward computes
+                    #   predict_token_num = ceil(max_output_length / inference_token_len)
+                    # via a non-None path only when labels OR max_output_length
+                    # is provided. Probes do not pass labels, so we explicitly
+                    # set max_output_length to the cell's pred_len.
+                    max_output_length=pred_len,
+                    inference_token_len=itl,
                 )
-                # Aurora returns a dataclass with .logits or .predictions
-                pred = getattr(out_model, 'logits', None) or getattr(out_model, 'predictions', None)
+                # Aurora returns a dataclass with .logits or .predictions.
+                # Use explicit None checks — `or` triggers bool(tensor) which
+                # raises for multi-element tensors.
+                pred = getattr(out_model, 'logits', None)
+                if pred is None:
+                    pred = getattr(out_model, 'predictions', None)
                 if pred is None and isinstance(out_model, (tuple, list)):
                     pred = out_model[0]
                 if pred is None:
@@ -444,12 +534,12 @@ def validate_invariance():
             inference_token_len=itl, max_output_length=8, num_samples=5,
         )
 
-    # Attach probes
+    # Attach probes (Probe A hooks TextEncoder output; Probe B hooks
+    # TextGuider attention. See class docstrings for rationale.)
     gn = GradNormProbe()
     ab = AttentionProbe()
-    te_emb = model.TextEncoder.model.get_input_embeddings()
-    gn.attach(te_emb)
-    ab.attach(model.TextGuider)
+    gn.attach(_find_text_encoder(model))
+    ab.attach(_find_text_guider(model))
 
     # Run 2: hooks attached. SAME seed.
     torch.manual_seed(42)

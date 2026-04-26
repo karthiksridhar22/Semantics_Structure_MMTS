@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2022,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0170385796809569,
+  "gradnorm_std": 0.019964908590827366,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9732428789138794,
+  "attn_max_weight_mean": 0.16314826409022012,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.013853362761437893,
+  "divergence_max_sq": 0.05869529768824577,
+  "divergence_n_samples": 10
+}

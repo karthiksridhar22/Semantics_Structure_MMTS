@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2022,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0014128432473322998,
+  "gradnorm_std": 0.0013932074230364937,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9878528118133545,
+  "attn_max_weight_mean": 0.14071401953697205,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0010825364151969552,
+  "divergence_max_sq": 0.0026421959046274424,
+  "divergence_n_samples": 10
+}

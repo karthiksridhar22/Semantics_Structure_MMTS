@@ -174,7 +174,7 @@ SEEDS = {
 }
 
 CONDITIONS = ['C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
-              'C5_constant', 'C7_null', 'C8_oracle']
+              'C5_constant', 'C7_null', 'C8_oracle', 'C9_zero_priors']
 # C6 absent by design — triggered via CLI at run-time.
 
 # Conditions whose CSV content depends on the seed (i.e. use an RNG).
@@ -386,15 +386,30 @@ def c8_oracle(df: pd.DataFrame, text_cols, target='OT',
     return out
 
 
+def c9_zero_priors(df: pd.DataFrame, null_numeric_cols, **_) -> pd.DataFrame:
+    """C9: original text + zeroed numeric priors.
+
+    Completes the disentanglement design. C2/C5/C7 zero BOTH text and priors.
+    C3/C4/C8 perturb text but KEEP priors. C9 keeps text intact and zeros
+    only the numeric priors. Comparing C9 vs C2 isolates the contribution
+    of text content (with priors absent in both); comparing C9 vs C1
+    isolates the contribution of priors (with text identical in both).
+    """
+    out = df.copy()
+    _set_cols(out, null_numeric_cols, 0.0)
+    return out
+
+
 # Dispatch table: condition name -> (function, kwargs_from_context)
 PERTURB_FNS = {
-    'C1_original':   c1_original,
-    'C2_empty':      c2_empty,
-    'C3_shuffled':   c3_shuffled,
+    'C1_original':    c1_original,
+    'C2_empty':       c2_empty,
+    'C3_shuffled':    c3_shuffled,
     'C4_crossdomain': c4_crossdomain,
-    'C5_constant':   c5_constant,
-    'C7_null':       c7_null,
-    'C8_oracle':     c8_oracle,
+    'C5_constant':    c5_constant,
+    'C7_null':        c7_null,
+    'C8_oracle':      c8_oracle,
+    'C9_zero_priors': c9_zero_priors,
 }
 
 
@@ -426,14 +441,19 @@ def validate_perturbation(original: pd.DataFrame, perturbed: pd.DataFrame,
         errors.append(f'column layout changed')
 
     # For C3/C4/C8: numeric priors should NOT have been zeroed.
-    # For C2/C5/C7: they SHOULD be zero (if present).
-    should_be_zero = condition in ('C2_empty', 'C5_constant', 'C7_null')
+    # For C2/C5/C7/C9: they SHOULD be zero (if present).
+    should_be_zero = condition in ('C2_empty', 'C5_constant', 'C7_null',
+                                   'C9_zero_priors')
 
     for col in original.columns:
         orig_vals = original[col]
         new_vals = perturbed[col]
         if col in allowed_text_cols:
-            continue  # text cols are allowed to change
+            # C9 keeps text columns intact; verify they did NOT change.
+            if condition == 'C9_zero_priors':
+                if not orig_vals.equals(new_vals):
+                    errors.append(f'{col}: text changed under C9 but should NOT have')
+            continue  # other conditions are allowed to change text
         if col in allowed_null_numeric_cols:
             if should_be_zero:
                 if not (new_vals.fillna(0) == 0).all():

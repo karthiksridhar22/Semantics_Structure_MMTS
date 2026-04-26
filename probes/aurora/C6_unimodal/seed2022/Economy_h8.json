@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2022,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.16253153855601946,
+  "gradnorm_std": 0.11769595721055176,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9660197099049886,
+  "attn_max_weight_mean": 0.17432456215222678,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.05317838117480278,
+  "divergence_max_sq": 0.10758712887763977,
+  "divergence_n_samples": 10
+}

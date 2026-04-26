@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2021,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 3.325531189640363,
+  "gradnorm_std": 5.033438035952049,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9654516379038492,
+  "attn_max_weight_mean": 0.17473879953225455,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.031170297414064407,
+  "divergence_max_sq": 0.08542313426733017,
+  "divergence_n_samples": 10
+}

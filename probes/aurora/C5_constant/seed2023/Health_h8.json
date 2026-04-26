@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2023,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.9001561233308166,
+  "gradnorm_std": 1.5577333729185563,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9734581907590231,
+  "attn_max_weight_mean": 0.16309519608815512,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0473858006298542,
+  "divergence_max_sq": 0.17749494314193726,
+  "divergence_n_samples": 10
+}

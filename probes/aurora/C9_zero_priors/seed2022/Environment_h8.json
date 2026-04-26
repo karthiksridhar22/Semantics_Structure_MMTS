@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2022,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.008796551575263342,
+  "gradnorm_std": 0.0036452860438080828,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9828502734502157,
+  "attn_max_weight_mean": 0.15052356322606406,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.028570303693413734,
+  "divergence_max_sq": 0.2025328129529953,
+  "divergence_n_samples": 10
+}

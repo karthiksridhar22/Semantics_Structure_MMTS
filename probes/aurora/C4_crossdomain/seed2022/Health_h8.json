@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2022,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.024535262724384665,
+  "gradnorm_std": 0.0253426320068311,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9733937581380209,
+  "attn_max_weight_mean": 0.1624593585729599,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.017618980258703232,
+  "divergence_max_sq": 0.12704315781593323,
+  "divergence_n_samples": 10
+}

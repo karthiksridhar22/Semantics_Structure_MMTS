@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2021,
+  "domain": "Security",
+  "pred_len": 8,
+  "seq_len": 220,
+  "gradnorm_mean": 0.3892398715640108,
+  "gradnorm_std": 0.5777487492534381,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9820167422294617,
+  "attn_max_weight_mean": 0.14722183346748352,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.06516676396131516,
+  "divergence_max_sq": 0.1216847151517868,
+  "divergence_n_samples": 10
+}

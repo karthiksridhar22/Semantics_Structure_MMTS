@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2022,
+  "domain": "Agriculture",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.13256703627606234,
+  "gradnorm_std": 0.1870142688428502,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9665451447168986,
+  "attn_max_weight_mean": 0.1750283439954122,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.014777096919715405,
+  "divergence_max_sq": 0.03914196789264679,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C1_original",
+  "seed": 2023,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.010287753616770109,
+  "gradnorm_std": 0.0011994552168998886,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9826895793279012,
+  "attn_max_weight_mean": 0.15100576976935068,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.004679512232542038,
+  "divergence_max_sq": 0.011970721185207367,
+  "divergence_n_samples": 10
+}

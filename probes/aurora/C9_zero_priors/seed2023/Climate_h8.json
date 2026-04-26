@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2023,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.004224547214107588,
+  "gradnorm_std": 0.005492017545627133,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9872956275939941,
+  "attn_max_weight_mean": 0.14270434776941934,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.026596063748002052,
+  "divergence_max_sq": 0.05375298485159874,
+  "divergence_n_samples": 10
+}

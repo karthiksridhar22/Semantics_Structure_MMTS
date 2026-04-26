@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2021,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.050219328103897475,
+  "gradnorm_std": 0.061984474940485534,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.972826341787974,
+  "attn_max_weight_mean": 0.16342592239379883,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.02562313713133335,
+  "divergence_max_sq": 0.05173121765255928,
+  "divergence_n_samples": 10
+}

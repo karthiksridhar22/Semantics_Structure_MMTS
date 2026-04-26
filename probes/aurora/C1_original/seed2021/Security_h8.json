@@ -1,0 +1,16 @@
+{
+  "condition": "C1_original",
+  "seed": 2021,
+  "domain": "Security",
+  "pred_len": 8,
+  "seq_len": 220,
+  "gradnorm_mean": 0.26599719375371933,
+  "gradnorm_std": 0.27733046374990694,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.98211536804835,
+  "attn_max_weight_mean": 0.14706581830978394,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0562967024743557,
+  "divergence_max_sq": 0.10363350808620453,
+  "divergence_n_samples": 10
+}

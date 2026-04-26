@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2022,
+  "domain": "Security",
+  "pred_len": 8,
+  "seq_len": 220,
+  "gradnorm_mean": 0.13611589496334395,
+  "gradnorm_std": 0.1353281478186729,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9821342428525289,
+  "attn_max_weight_mean": 0.14696299533049265,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.049720510840415955,
+  "divergence_max_sq": 0.09814038872718811,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2021,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.036630330607295036,
+  "gradnorm_std": 0.03965168072357047,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9663975040117899,
+  "attn_max_weight_mean": 0.17371722062428793,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0775199756026268,
+  "divergence_max_sq": 0.3536108732223511,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2021,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.004383935076475609,
+  "gradnorm_std": 0.007053543322361263,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9880063335100809,
+  "attn_max_weight_mean": 0.1409353365500768,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0014694698620587587,
+  "divergence_max_sq": 0.005490344949066639,
+  "divergence_n_samples": 10
+}

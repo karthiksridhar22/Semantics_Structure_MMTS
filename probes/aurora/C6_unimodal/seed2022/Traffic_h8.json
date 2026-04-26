@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2022,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0007486068934667856,
+  "gradnorm_std": 0.0009310893394990046,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9878188967704773,
+  "attn_max_weight_mean": 0.14115706582864126,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0018703620880842209,
+  "divergence_max_sq": 0.004675253760069609,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2021,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 2.084103793526689,
+  "gradnorm_std": 3.54337668759584,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9663575688997904,
+  "attn_max_weight_mean": 0.1738739162683487,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.03031299076974392,
+  "divergence_max_sq": 0.09071680158376694,
+  "divergence_n_samples": 10
+}

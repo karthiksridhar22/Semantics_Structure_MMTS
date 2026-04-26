@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2022,
+  "domain": "SocialGood",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.026146259779731434,
+  "gradnorm_std": 0.008678283175592426,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9684739311536154,
+  "attn_max_weight_mean": 0.16383800903956094,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.04180297628045082,
+  "divergence_max_sq": 0.08991795778274536,
+  "divergence_n_samples": 10
+}

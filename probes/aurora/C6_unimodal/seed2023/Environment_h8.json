@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2023,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.009365381362537542,
+  "gradnorm_std": 0.005749122977022859,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9828088283538818,
+  "attn_max_weight_mean": 0.15058732529481253,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.014264802448451519,
+  "divergence_max_sq": 0.09108605980873108,
+  "divergence_n_samples": 10
+}

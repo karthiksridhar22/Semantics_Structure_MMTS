@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2023,
+  "domain": "Agriculture",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.15538364400466284,
+  "gradnorm_std": 0.10822080982282625,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9670161008834839,
+  "attn_max_weight_mean": 0.1745769331852595,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.07373228669166565,
+  "divergence_max_sq": 0.3360982835292816,
+  "divergence_n_samples": 10
+}

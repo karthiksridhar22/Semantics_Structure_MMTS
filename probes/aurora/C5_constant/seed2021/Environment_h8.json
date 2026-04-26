@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2021,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.012051920251299938,
+  "gradnorm_std": 0.011288322580874276,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9830954670906067,
+  "attn_max_weight_mean": 0.15027230978012085,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.008593101985752583,
+  "divergence_max_sq": 0.03033381514251232,
+  "divergence_n_samples": 10
+}

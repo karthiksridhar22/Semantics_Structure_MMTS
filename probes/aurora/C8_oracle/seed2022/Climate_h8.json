@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2022,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.0041593542555347085,
+  "gradnorm_std": 0.0026866752968957414,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9877812067667643,
+  "attn_max_weight_mean": 0.14166609942913055,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.024107540026307106,
+  "divergence_max_sq": 0.05836556851863861,
+  "divergence_n_samples": 10
+}

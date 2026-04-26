@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2021,
+  "domain": "Energy",
+  "pred_len": 8,
+  "seq_len": 1056,
+  "gradnorm_mean": 0.1862421923627456,
+  "gradnorm_std": 0.2719553254332668,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9642964998881022,
+  "attn_max_weight_mean": 0.1719240794579188,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.04601651430130005,
+  "divergence_max_sq": 0.14093853533267975,
+  "divergence_n_samples": 10
+}

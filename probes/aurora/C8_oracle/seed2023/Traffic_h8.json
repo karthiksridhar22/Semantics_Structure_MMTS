@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2023,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0027449449504880854,
+  "gradnorm_std": 0.004180007123990554,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9882392485936483,
+  "attn_max_weight_mean": 0.1403739849726359,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0012821898562833667,
+  "divergence_max_sq": 0.0026188173796981573,
+  "divergence_n_samples": 10
+}

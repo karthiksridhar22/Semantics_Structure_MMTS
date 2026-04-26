@@ -1,0 +1,16 @@
+{
+  "condition": "C2_empty",
+  "seed": 2023,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0007315512824182709,
+  "gradnorm_std": 0.00027051960801297356,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9878033796946207,
+  "attn_max_weight_mean": 0.14106610417366028,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0011191408848389983,
+  "divergence_max_sq": 0.0024867088068276644,
+  "divergence_n_samples": 10
+}

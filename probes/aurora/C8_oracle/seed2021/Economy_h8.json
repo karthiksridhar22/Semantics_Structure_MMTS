@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2021,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.5984692117199302,
+  "gradnorm_std": 0.549356828485879,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9667352636655172,
+  "attn_max_weight_mean": 0.17308060824871063,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.04197348281741142,
+  "divergence_max_sq": 0.11930892616510391,
+  "divergence_n_samples": 10
+}

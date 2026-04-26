@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2021,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.03231105539695515,
+  "gradnorm_std": 0.03727243898315714,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9873044093449911,
+  "attn_max_weight_mean": 0.14276564121246338,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.028068948537111282,
+  "divergence_max_sq": 0.054239384829998016,
+  "divergence_n_samples": 10
+}

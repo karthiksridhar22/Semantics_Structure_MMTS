@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2022,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.009738574241055176,
+  "gradnorm_std": 0.01215219589434169,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9873058001200358,
+  "attn_max_weight_mean": 0.14277658859888712,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.01676747016608715,
+  "divergence_max_sq": 0.03828814625740051,
+  "divergence_n_samples": 10
+}

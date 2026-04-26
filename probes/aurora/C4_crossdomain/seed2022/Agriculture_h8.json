@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2022,
+  "domain": "Agriculture",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.09361797229697306,
+  "gradnorm_std": 0.10498194546364326,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9666275978088379,
+  "attn_max_weight_mean": 0.17514252165953317,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.011889996938407421,
+  "divergence_max_sq": 0.0348348431289196,
+  "divergence_n_samples": 10
+}

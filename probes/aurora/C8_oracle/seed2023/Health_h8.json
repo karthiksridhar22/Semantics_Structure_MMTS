@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2023,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.010863153370640552,
+  "gradnorm_std": 0.017113897656832095,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9738479852676392,
+  "attn_max_weight_mean": 0.16196504731973013,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.02798200584948063,
+  "divergence_max_sq": 0.09293392300605774,
+  "divergence_n_samples": 10
+}

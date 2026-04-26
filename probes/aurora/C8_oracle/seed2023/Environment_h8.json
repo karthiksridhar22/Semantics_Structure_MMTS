@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2023,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.049050606709594526,
+  "gradnorm_std": 0.0782268664724378,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9832309087117513,
+  "attn_max_weight_mean": 0.1498014678557714,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.007401581387966871,
+  "divergence_max_sq": 0.018833423033356667,
+  "divergence_n_samples": 10
+}

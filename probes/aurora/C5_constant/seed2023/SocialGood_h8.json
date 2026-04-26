@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2023,
+  "domain": "SocialGood",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.01412265452866753,
+  "gradnorm_std": 0.012930786069379264,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9694074392318726,
+  "attn_max_weight_mean": 0.16249869763851166,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.06553374975919724,
+  "divergence_max_sq": 0.2100248634815216,
+  "divergence_n_samples": 10
+}

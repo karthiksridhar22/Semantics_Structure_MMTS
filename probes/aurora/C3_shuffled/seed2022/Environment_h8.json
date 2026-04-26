@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2022,
+  "domain": "Environment",
+  "pred_len": 8,
+  "seq_len": 528,
+  "gradnorm_mean": 0.003175753129956623,
+  "gradnorm_std": 0.00268045163853216,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9827252626419067,
+  "attn_max_weight_mean": 0.15058123568693796,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.004920906852930784,
+  "divergence_max_sq": 0.010229186154901981,
+  "divergence_n_samples": 10
+}

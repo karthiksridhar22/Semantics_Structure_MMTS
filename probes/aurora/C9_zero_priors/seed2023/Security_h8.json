@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2023,
+  "domain": "Security",
+  "pred_len": 8,
+  "seq_len": 220,
+  "gradnorm_mean": 0.08360482007265091,
+  "gradnorm_std": 0.033382442763984145,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9819814761479696,
+  "attn_max_weight_mean": 0.1470823436975479,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.03753267973661423,
+  "divergence_max_sq": 0.083825021982193,
+  "divergence_n_samples": 10
+}

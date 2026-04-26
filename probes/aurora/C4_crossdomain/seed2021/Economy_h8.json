@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2021,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.15062833561872443,
+  "gradnorm_std": 0.20474463978052207,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.965682864189148,
+  "attn_max_weight_mean": 0.17491689324378967,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.045689281076192856,
+  "divergence_max_sq": 0.11294278502464294,
+  "divergence_n_samples": 10
+}

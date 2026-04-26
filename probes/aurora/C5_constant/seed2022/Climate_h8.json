@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2022,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.008139589393977076,
+  "gradnorm_std": 0.011892505525941847,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9875418146451315,
+  "attn_max_weight_mean": 0.142080287138621,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.028926867991685867,
+  "divergence_max_sq": 0.08293285965919495,
+  "divergence_n_samples": 10
+}

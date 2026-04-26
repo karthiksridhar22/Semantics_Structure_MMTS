@@ -1,0 +1,16 @@
+{
+  "condition": "C3_shuffled",
+  "seed": 2021,
+  "domain": "SocialGood",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.027702062390744686,
+  "gradnorm_std": 0.027540314193144618,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9684347907702128,
+  "attn_max_weight_mean": 0.1634684900442759,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.07536344975233078,
+  "divergence_max_sq": 0.18518954515457153,
+  "divergence_n_samples": 10
+}

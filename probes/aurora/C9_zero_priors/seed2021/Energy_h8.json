@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2021,
+  "domain": "Energy",
+  "pred_len": 8,
+  "seq_len": 1056,
+  "gradnorm_mean": 0.1723602827017506,
+  "gradnorm_std": 0.14379172187806957,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9646867513656616,
+  "attn_max_weight_mean": 0.1706254482269287,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.03134848177433014,
+  "divergence_max_sq": 0.11998559534549713,
+  "divergence_n_samples": 10
+}

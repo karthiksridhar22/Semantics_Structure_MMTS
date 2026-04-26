@@ -1,0 +1,16 @@
+{
+  "condition": "C6_unimodal",
+  "seed": 2023,
+  "domain": "Agriculture",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.03238662083943685,
+  "gradnorm_std": 0.02174152331819205,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9666310548782349,
+  "attn_max_weight_mean": 0.1747194230556488,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.011797242797911167,
+  "divergence_max_sq": 0.027026640251278877,
+  "divergence_n_samples": 10
+}

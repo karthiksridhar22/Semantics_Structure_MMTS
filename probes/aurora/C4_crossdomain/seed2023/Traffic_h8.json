@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2023,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0012433036657360692,
+  "gradnorm_std": 0.0014211278900863092,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.987839420636495,
+  "attn_max_weight_mean": 0.14094151059786478,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.0017582029104232788,
+  "divergence_max_sq": 0.0035199804697185755,
+  "divergence_n_samples": 10
+}

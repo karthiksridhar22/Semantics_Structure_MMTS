@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2021,
+  "domain": "Health",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.007769902469590306,
+  "gradnorm_std": 0.006864104741145994,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9730169773101807,
+  "attn_max_weight_mean": 0.16415567696094513,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.01978289894759655,
+  "divergence_max_sq": 0.08497542142868042,
+  "divergence_n_samples": 10
+}

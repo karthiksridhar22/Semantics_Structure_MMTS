@@ -1,0 +1,16 @@
+{
+  "condition": "C4_crossdomain",
+  "seed": 2023,
+  "domain": "Climate",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 0.001212165302907427,
+  "gradnorm_std": 0.0008127200813633177,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.98741082350413,
+  "attn_max_weight_mean": 0.1422673612833023,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.017546964809298515,
+  "divergence_max_sq": 0.049048714339733124,
+  "divergence_n_samples": 10
+}

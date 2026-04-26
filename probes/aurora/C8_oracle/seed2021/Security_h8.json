@@ -1,0 +1,16 @@
+{
+  "condition": "C8_oracle",
+  "seed": 2021,
+  "domain": "Security",
+  "pred_len": 8,
+  "seq_len": 220,
+  "gradnorm_mean": 0.4784468114376068,
+  "gradnorm_std": 0.2812364670327528,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9828397432963053,
+  "attn_max_weight_mean": 0.14583743611971536,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.037485528737306595,
+  "divergence_max_sq": 0.06454379111528397,
+  "divergence_n_samples": 10
+}

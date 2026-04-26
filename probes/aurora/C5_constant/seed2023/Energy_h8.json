@@ -1,0 +1,16 @@
+{
+  "condition": "C5_constant",
+  "seed": 2023,
+  "domain": "Energy",
+  "pred_len": 8,
+  "seq_len": 1056,
+  "gradnorm_mean": 0.7630206610386571,
+  "gradnorm_std": 1.105867172472494,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.9653926293055216,
+  "attn_max_weight_mean": 0.17049536605676016,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.06467434018850327,
+  "divergence_max_sq": 0.12939751148223877,
+  "divergence_n_samples": 10
+}

@@ -1,0 +1,16 @@
+{
+  "condition": "C9_zero_priors",
+  "seed": 2022,
+  "domain": "Traffic",
+  "pred_len": 8,
+  "seq_len": 96,
+  "gradnorm_mean": 0.0011417858768254519,
+  "gradnorm_std": 0.0013551761368101212,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.987885574499766,
+  "attn_max_weight_mean": 0.14078987638155618,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.002484251745045185,
+  "divergence_max_sq": 0.007490211166441441,
+  "divergence_n_samples": 10
+}

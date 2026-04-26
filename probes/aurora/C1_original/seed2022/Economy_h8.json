@@ -1,0 +1,16 @@
+{
+  "condition": "C1_original",
+  "seed": 2022,
+  "domain": "Economy",
+  "pred_len": 8,
+  "seq_len": 192,
+  "gradnorm_mean": 1.0427498606344063,
+  "gradnorm_std": 1.126419339855856,
+  "gradnorm_n": 3,
+  "attn_entropy_rel_mean": 0.965895414352417,
+  "attn_max_weight_mean": 0.17488004763921103,
+  "attn_n_batches": 3,
+  "divergence_mean_sq": 0.11538689583539963,
+  "divergence_max_sq": 0.8307933807373047,
+  "divergence_n_samples": 10
+}
