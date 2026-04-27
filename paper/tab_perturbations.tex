@@ -1,0 +1,34 @@
+% Two-axis perturbation table -- minimal, no cluster column.
+% Source of truth for which conditions zero the prior:
+%   code/deep_analysis.py::CONDITION_DESIGN
+%   code/generate_perturbations.py::c2_empty / c5_constant.
+\begin{table}[t]
+\centering
+\caption{\textbf{Perturbation conditions} as transformations
+$(\pi_{\text{text}}, \pi_{\text{prior}})$ on $(\Ttext, \pprior)$.
+$\sigma$ is a within-domain permutation seeded by the run; $\Ttext'$
+is paired cross-domain text aligned to the same date; $c$ is the
+fixed string ``\textit{Time series data point.}''; $\tau(\ytarget)$
+is the templated oracle string ``\textit{The next $H$ values are
+$y_1,\dots,y_H$.}''  \Csix{} triggers each model's published
+unimodal flag, which simultaneously drops the text path and the
+prior fusion.}
+\label{tab:perturbations}
+\small
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{l l l}
+\toprule
+\textbf{Cond.} & $\pi_{\text{text}}(\Ttext)$ & $\pi_{\text{prior}}(\pprior)$ \\
+\midrule
+\Cone{}    & $\Ttext$                              & $\pprior$    \\
+\Cthree{}  & $\Ttext_{\sigma(\cdot)}$              & $\pprior$    \\
+\Cfour{}   & $\Ttext'$                             & $\pprior$    \\
+\Ceight{}  & $\tau(\ytarget)$                      & $\pprior$    \\
+\Cnine{}   & $\Ttext$                              & $\mathbf{0}$ \\
+\Ctwo{}    & $(\varepsilon,\ldots,\varepsilon)$    & $\mathbf{0}$ \\
+\Cfive{}   & $(c,\ldots,c)$                        & $\mathbf{0}$ \\
+\Csix{}    & \multicolumn{2}{l}{architectural unimodal flag} \\
+\bottomrule
+\end{tabular}
+\end{table}

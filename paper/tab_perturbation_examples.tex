@@ -1,0 +1,33 @@
+% One real example row per condition for the Public_Health domain.
+% Source: data/mmtsflib/<cond>/.../Public_Health/US_FLURATIO_Week.csv,
+% row index 801 (week of 2013-02-04, OT=3.236).
+\begin{table*}[t]
+\centering
+\caption{\textbf{Concrete examples} of the text and prior values fed
+to the model under each condition for one fixed row of the
+\textsc{Public\_Health} domain (\textsc{US\_FLURATIO\_Week}, week of
+2013-02-04, ground-truth $\mathrm{OT}=3.236$).  ``Text'' is the
+\texttt{Final\_Search\_4} column (the one consumed by the fusion
+path); ``Prior'' is \texttt{prior\_history\_avg}.  Texts truncated at
+$\sim\!100$ characters.  By design, $\Cone\!=\!\Cnine{}$ in text and
+$\Ctwo\!=\!\Cfive\!=\!\Cnine{}$ in prior, so each pair within those
+groups isolates the effect of varying the \emph{other} axis.}
+\label{tab:perturbation_examples}
+\small
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{l p{0.66\linewidth} l}
+\toprule
+\textbf{Cond.} & \textbf{Text fed to fusion path} & \textbf{Prior} \\
+\midrule
+\Cone{}    & ``Available facts are as follows: 2013-01-28: Warm winters tend to be followed by severe influenza epidemics, and climate\dots''                & $2.854$ \\
+\Cthree{}  & ``Available facts are as follows: 2005-03-21: Objective facts about the Public Health and FLU situation: There have been\dots''                  & $2.854$ \\
+\Cfour{}   & ``Available facts are as follows: 2013-01-21: The U.S.\ trade balance has deteriorated by more than \$8 billion from 1964 to 1971\dots''         & $2.854$ \\
+\Ceight{}  & ``Available facts are as follows: Step+1: The OT will be 2.894210. Step+2: The OT will be 2.717420. Step+3: The OT will\dots''                   & $2.854$ \\
+\midrule
+\Cnine{}   & ``Available facts are as follows: 2013-01-28: Warm winters tend to be followed by severe influenza epidemics, and climate\dots''                & $0.000$ \\
+\Ctwo{}    & {\itshape (empty string)}                                                                                                                          & $0.000$ \\
+\Cfive{}   & ``Time series data point.''                                                                                                                       & $0.000$ \\
+\bottomrule
+\end{tabular}
+\end{table*}

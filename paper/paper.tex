@@ -1,0 +1,525 @@
+%%%%%%%% FMSD @ ICML 2026 SUBMISSION %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Multimodal Time-Series Probing -- Disentangling Text from Priors
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+% Blind-review version of the ICML 2026 style.
+\usepackage{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+% --- Best / second-best highlight commands -----------------------------
+% Used by the auto-generated tab_main.tex.
+\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\second}[1]{\underline{#1}}
+
+% --- Condition shortcuts ----------------------------------------------
+\newcommand{\Cone}{\textsc{C1}}
+\newcommand{\Ctwo}{\textsc{C2}}
+\newcommand{\Cthree}{\textsc{C3}}
+\newcommand{\Cfour}{\textsc{C4}}
+\newcommand{\Cfive}{\textsc{C5}}
+\newcommand{\Csix}{\textsc{C6}}
+\newcommand{\Ceight}{\textsc{C8}}
+\newcommand{\Cnine}{\textsc{C9}}
+
+\newcommand{\TaTS}{\textsc{TaTS}}
+\newcommand{\MMTSF}{\textsc{MM-TSFlib}}
+\newcommand{\Aurora}{\textsc{Aurora}}
+\newcommand{\TimeMMD}{Time-MMD}
+
+% --- Math notation shortcuts ------------------------------------------
+% A small, consistent vocabulary used in every equation.
+\newcommand{\xnum}{\mathbf{x}}              % numeric history
+\newcommand{\Ttext}{\mathbf{T}}             % text history
+\newcommand{\pprior}{\mathbf{p}}            % prior column
+\newcommand{\yhat}{\hat{\mathbf{y}}}        % forecast
+\newcommand{\ytarget}{\mathbf{y}}           % ground truth
+\newcommand{\Etext}{\mathbf{E}}             % text covariate matrix
+\newcommand{\Ztext}{\mathbf{Z}_{\!T}}       % distilled text representation
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Text}{\mathcal{T}}
+\newcommand{\bbE}{\mathbb{E}}
+
+\icmltitlerunning{Reading or Reciting? Multimodal Time Series on \TimeMMD}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{What Are Multimodal Time-Series Models Actually Reading?\\
+             Disentangling Text Semantics from Numeric Priors on Time-MMD}
+
+  \icmlsetsymbol{equal}{*}
+  \begin{icmlauthorlist}
+    \icmlauthor{Anonymous Authors}{anon}
+  \end{icmlauthorlist}
+  \icmlaffiliation{anon}{Anonymous Institution}
+
+  \icmlcorrespondingauthor{Anonymous Authors}{anon@anon.invalid}
+  \icmlkeywords{multimodal time series, foundation models, probing,
+                evaluation, Time-MMD, text-as-context}
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+% =====================================================================
+\begin{abstract}
+Multimodal time-series forecasters now claim that natural-language
+context substantially improves numeric prediction.  Three concurrent
+paradigms report double-digit MSE gains over unimodal baselines on
+the \TimeMMD{} benchmark: a pretrained foundation model (\Aurora{}),
+an early-fusion text-channel approach (\TaTS{}), and a late-fusion
+residual approach (\MMTSF{}).  We test whether these gains stem from
+\emph{text semantics} or from a co-shipped numeric \emph{prior column}
+that flows through the same fusion path.  Holding model checkpoints
+fixed, we perturb \TimeMMD{} along two orthogonal axes -- text content
+(empty, shuffled, cross-domain, constant, oracle) and numeric prior
+(intact, zeroed) -- yielding eight conditions.  Across nine domains,
+four horizons, three seeds, and three backbones per fusion
+architecture (\textbf{$7{,}776$ forecasting runs}), we find:
+(i) zeroing the prior column degrades MSE by up to $31.1\%$, while
+every text-only perturbation moves MSE by less than $0.06\%$;
+(ii) \Aurora{}'s predictions are bit-identical with full text, zeroed
+text, and the model's own unimodal flag, even though its text encoder
+still receives non-zero gradients; (iii) \Aurora{}'s text
+cross-attention has near-uniform entropy ($\widehat H = 0.975$)
+regardless of input.  On \TimeMMD{}, the apparent multimodal gain is
+structural rather than semantic, with implications for how benchmarks
+report multimodal lift and how foundation-model evaluation should be
+designed.
+\end{abstract}
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Foundation models that consume both numeric time series and natural
+language are now a fast-growing branch of structured-data
+research~\citep{liu2024timemmd,zhou2025tats,wu2025aurora,liu2024autotimes}.
+On \TimeMMD{}~\citep{liu2024timemmd} -- the standard text--time-series
+forecasting benchmark -- three architectural paradigms have emerged.
+A zero-shot pretrained model, \Aurora{}~\citep{wu2025aurora}, attends
+over a tokenised text column.  A per-domain trained early-fusion
+model, \TaTS{}~\citep{zhou2025tats}, projects per-row text embeddings
+and concatenates them as additional input channels.  A per-domain
+trained late-fusion model, \MMTSF{}~\citep{liu2024timemmd}, blends a
+pooled-text vector with the time-series head's output.  All three
+publish double-digit MSE improvements over unimodal baselines.
+
+A closer look at the data pipeline complicates this story.  Every
+\TimeMMD{} domain ships not only paired text but also a numeric
+column \texttt{prior\_history\_avg}: an LLM-generated forecast for
+the same horizon~\citep{liu2024timemmd}.  Two of the three reference
+implementations actively use it.  In \MMTSF{}'s released training
+loop the multimodal output is computed as
+\(\texttt{prompt\_y} = \texttt{norm}(\texttt{prompt\_emb})
+                       + \texttt{prior\_y}\),
+where \texttt{prompt\_emb} is a frozen-BERT pooled text embedding and
+\texttt{prior\_y} is the prior column.  \TaTS{} adds an analogous
+output-side blend
+$\yhat = (1\!-\!w)\,\yhat_{\text{model}}
+        + w\cdot\pprior_{L+1:L+H}$
+on top of an early-fusion text channel.  \Aurora{} does not consume
+the prior column, but does cross-attend over the text column.
+Crucially, in every published implementation, ``no text'' is
+operationalised in a way that simultaneously zeroes a numeric signal
+that has nothing to do with text semantics -- a confound that has
+previously caused well-known reasoning benchmarks to collapse under
+adversarial probes~\citep{niven2019probing,mccoy2019hans}.
+
+We therefore ask: \emph{when these models appear to ``use'' text, is
+the gain coming from natural-language semantics, or from the prior
+column that flows through the same fusion path?}  We construct an
+$8$-condition behavioural ladder over two orthogonal axes -- text
+content (intact, empty, within-domain shuffled, cross-domain swapped,
+constant, oracle pseudo-future) and numeric prior (intact, zeroed)
+-- plus an architectural unimodal switch via each model's published
+flag.  Holding the rest of the pipeline fixed by upstream code with
+audited patches (\cref{sec:patches}), we re-run all three
+architectures across $9$ domains, $4$ horizons, $3$ seeds, and $3$
+backbones per trained method.  For \Aurora{} we additionally probe
+the live forward--backward graph: gradient norm at the distilled text
+tokens, cross-attention entropy at the text guider, and prediction
+divergence under text ablation (\cref{sec:probes}).  Our findings,
+summarised in \cref{tab:main}, are blunt.
+
+\paragraph{Contributions.}
+\textbf{(1) Reproducibility audit.}  We release the first end-to-end
+unification of \Aurora{}, \TaTS{}, and \MMTSF{} on \TimeMMD{}, with
+seed-stable data perturbations and bit-level reproducible runs across
+$7{,}776$ cells.  \textbf{(2) Two-axis falsification protocol.}
+Our $8$-condition design, formalised as transformations on
+$(\Ttext,\pprior)$ in \cref{sec:protocol}, separates content-bearing
+text effects from numeric-prior effects within a single architecture
+and checkpoint.  \textbf{(3) Mechanistic probes.}  For \Aurora{} we
+show that the text pathway is wired into the gradient graph but its
+forward-pass contribution is bit-identical to no-text on every cell,
+with near-uniform cross-attention.
+\textbf{(4) Implications for benchmark design.}  We argue that any
+future multimodal time-series benchmark must report a prior-zeroed
+control to be informative about text use.
+
+% =====================================================================
+\section{Setup and Notation}
+\label{sec:background}
+
+A \TimeMMD{} dataset is a sequence of date-indexed records.  For a
+univariate forecasting task we organise each record into a sliding
+window of history length $L$ and forecast horizon $H$, with $N$ the
+number of windows in a split.  Within a window the four available
+signals are
+\begin{equation}
+\xnum   \in \Real^{L},\;\;
+\Ttext  \in \Text^{L},\;\;
+\pprior \in \Real^{L+H},\;\;
+\ytarget \in \Real^{H},
+\label{eq:signals}
+\end{equation}
+where $\Text$ is the alphabet of natural-language strings and
+$\Ttext_t$ is the text written for date $t$ (when no document is
+available the field carries the empty string $\varepsilon$).  The
+prior column $\pprior$ is a precomputed LLM-generated forecast
+included in \TimeMMD{}~\citep{liu2024timemmd}; it is defined for the
+whole window including the future portion $\pprior_{L+1:L+H}$, which
+the fusion paths consume.  A multimodal forecaster is then a function
+$\yhat = f_{\theta}(\xnum,\Ttext,\pprior) \in \Real^{H}.$
+
+A frozen pretrained language model $\phi:\Text \to \Real^{d_{e}}$
+maps each text row to a $d_e$-dimensional vector $\phi(\Ttext_t)$.
+We collect the per-row embeddings into the \emph{text covariate
+matrix}
+\begin{equation}
+\Etext(\Ttext) \;\coloneqq\;
+   \begin{bmatrix}
+   \phi(\Ttext_1) \\ \vdots \\ \phi(\Ttext_L)
+   \end{bmatrix}
+   \in \Real^{L\times d_{e}}.
+\label{eq:E_matrix}
+\end{equation}
+$\Etext$ is the central object: its row dimension matches the numeric
+history (so it can be concatenated to $\xnum$) and its column
+dimension is the language-model embedding size (so it can be pooled,
+attended to, or summarised).  How an architecture extracts predictive
+signal from $\Etext$ is what distinguishes the three paradigms below.
+
+% =====================================================================
+\section{Three Multimodal Architectures}
+\label{sec:fusion}
+
+\paragraph{\TaTS{} (early fusion).}
+$\phi$ is a frozen GPT-2 pooler~\citep{radford2019gpt2}.  A trainable
+MLP $\psi:\Real^{d_e}\to\Real^{d_p}$ projects each row of $\Etext$ to
+a small dimension $d_p$, after which the projected matrix
+$\psi(\Etext)\in\Real^{L\times d_p}$ is concatenated to $\xnum$ along
+the channel axis and fed to a backbone $f_{\theta}$
+(DLinear~\citep{zeng2023dlinear},
+Informer~\citep{zhou2021informer}, or
+iTransformer~\citep{liu2024itransformer}):
+\begin{equation}
+\yhat^{\TaTS} \;=\; (1\!-\!w)\;
+   f_{\theta}\!\bigl(\,[\,\xnum;\;\psi(\Etext)\,]\,\bigr)
+   \;+\; w\,\pprior_{L+1:L+H}.
+\label{eq:tats}
+\end{equation}
+The trained text path is the early-fusion concatenation; the prior
+column enters as an output-side residual blend with weight $w$ tuned
+per dataset.  In the released code, the line that performs the
+concatenation also calls \texttt{.detach()}, severing the gradient
+into $\psi$ -- a structural artefact whose consequences we trace in
+\cref{sec:detach_appendix}.
+
+\paragraph{\MMTSF{} (late fusion).}
+$\phi$ is a frozen BERT pooler~\citep{devlin2019bert}.  The text
+covariate matrix is summarised to a single horizon-shaped vector by
+a pooling and small projection,
+$\bar\phi(\Ttext) \in \Real^{H}$, which is then added to the prior
+horizon and blended residually with the time-series backbone:
+\begin{equation}
+\yhat^{\MMTSF} \;=\; (1\!-\!w)\,f_\theta(\xnum)
+   \;+\; w\,\bigl(\mathrm{norm}(\bar\phi(\Ttext))
+                  + \pprior_{L+1:L+H}\bigr).
+\label{eq:mmtsflib}
+\end{equation}
+The pooled-text term and the prior term enter through the
+\emph{same} additive residual: when $\pprior$ is zeroed, only the
+nearly-constant pooled-text contribution remains.  This is the
+mechanistic basis for our \Cnine{} (\textsc{zero-priors}) probe.
+
+\paragraph{\Aurora{} (cross-attention guidance, zero-shot).}
+$\phi$ is a frozen BERT producing per-token features
+$\Etext\in\Real^{L'\times d_e}$ (with $L'\!=\!125$ after sentence-level
+tokenisation).  Two trainable text paths follow: (i) a distillation
+decoder with $L_k\!=\!10$ learnable query tokens
+$\mathbf{Q}\in\Real^{L_k\times d}$ produces
+$\Ztext = \mathrm{CrossDec}(\mathbf{Q},\Etext)$, which biases the
+encoder's self-attention through a soft gate
+$\alpha_t = \mathrm{softmax}\bigl(\mathrm{TextGuider}(\xnum,\Ztext)\bigr)$;
+and (ii) a residual injection of $\Etext$ into the encoder output
+through a learned connector \texttt{ConnText}.  Schematically,
+\begin{equation}
+\yhat^{\Aurora} \;=\;
+   f^{\Aurora}_{\theta}\bigl(\xnum,\;\alpha_t,\;\Etext\bigr).
+\label{eq:aurora}
+\end{equation}
+\Aurora{} does not consume $\pprior$ at all; we verified this by
+inspecting the released model code.  By construction \Aurora{} is
+invariant to \Cnine{} -- a prediction we use as an internal sanity
+check, and one that holds bit-exactly (\cref{tab:main}).
+
+% =====================================================================
+\section{The Two-Axis Perturbation Protocol}
+\label{sec:protocol}
+
+Existing multimodal time-series papers compare ``with text'' to
+``without text'', which in light of \cref{eq:tats,eq:mmtsflib}
+conflates two distinct quantities: the text channel's contribution
+to the forecast, and the prior column's contribution that occurs
+alongside.  We therefore vary $\Ttext$ and $\pprior$ as independent
+transformations.  Let $\pi_{\text{text}}\!:\Text^{L}\!\to\!\Text^{L}$
+act on the text column and
+$\pi_{\text{prior}}\!:\Real^{L+H}\!\to\!\Real^{L+H}$ act on the prior
+column; the data passed to $f_\theta$ is then
+$(\xnum,\,\pi_{\text{text}}(\Ttext),\,\pi_{\text{prior}}(\pprior))$.
+Our eight conditions are precisely the values of
+$(\pi_{\text{text}},\pi_{\text{prior}})$ shown in
+\cref{tab:perturbations}.
+
+\input{tab_perturbations}
+
+\paragraph{Reading the perturbations.}
+Within-domain shuffling (\Cthree{}) breaks row alignment but
+preserves the marginal distribution of text at the date level;
+cross-domain swap (\Cfour{}) preserves natural-language style but
+breaks topical relevance; the constant string (\Cfive{}) removes both
+content and within-batch variation; and the oracle (\Ceight{})
+injects ground-truth future values into the text column as a
+templated string, which any text-reading model is forced to benefit
+from~\citep{niven2019probing}.  Following the \TimeMMD{} convention
+that ``no text-derived information'' includes both columns, the
+perturbations \Ctwo{} and \Cfive{} zero $\pprior$ in addition to
+perturbing $\Ttext$.  Comparing
+$\Ctwo{}/\Cfive{}/\Cnine{}$ therefore isolates the text channel's
+contribution \emph{when the prior is held at zero}: same prior
+treatment, three different text values, predictions expected to
+differ if and only if text is read.
+
+\paragraph{Why \Csix{} is special.}
+The architectural unimodal switch \Csix{} differs from the data-axis
+perturbations: it triggers each model's own published unimodal flag.
+In \MMTSF{} this sets $\texttt{prompt\_weight}=0$, dropping both the
+pooled-text term and the prior residual in \cref{eq:mmtsflib}
+simultaneously.  In \TaTS{} the flag drops the text concatenation
+channels and the prior blend.  By construction, any
+$\Cone\!\to\!\Csix$ gap conflates a text contribution and a prior
+contribution -- exactly the conflation our two-axis design
+separates.
+
+% =====================================================================
+\section{Mechanistic Probes for Aurora}
+\label{sec:probes}
+
+\Aurora{} exposes a uniquely clean architecture for mechanistic
+inspection.  We attach three probes to the live forward--backward
+graph; \cref{sec:probe_validation} verifies that the hooks are
+invariance-preserving (forward outputs bit-identical with and
+without instrumentation).
+
+\paragraph{Probe A -- gradient norm at distilled text tokens.}
+$\Ztext\in\Real^{B\times L_k\times d}$ from \cref{eq:aurora} is the
+trainable hand-off between the frozen-BERT text path and the
+time-series stream.  We measure
+\begin{equation}
+\widehat{g} \;=\;
+   \sqrt{\bbE_{(b,k,j)}\,
+   \bigl|\bigl(\nabla_{\Ztext}\,\mathcal{L}\bigr)_{b,k,j}\bigr|^{2}\,},
+\label{eq:gradnorm}
+\end{equation}
+the root-mean-square loss-gradient at the operating point.  Hooking
+$\Ztext$ rather than BERT's input embeddings is required because
+BERT is frozen -- the in-graph trainable text parameters live above
+this tensor.
+
+\paragraph{Probe B -- cross-attention entropy at the text guider.}
+For the cross-attention weights
+$\alpha_t \in \Real^{B\times H\times L_q\times L_k}$ from
+\cref{eq:aurora}, we compute the per-row Shannon entropy and
+normalise by the uniform upper bound:
+\begin{equation}
+\widehat{H} \;=\; \bbE_{b,h,q}\!\Bigl[\,
+   -\!\sum_{k} (\alpha_t)_{bhqk}\log (\alpha_t)_{bhqk}\Bigr]
+   \,/\,\log L_k.
+\label{eq:entropy}
+\end{equation}
+$\widehat H=1$ means uniform attention across the $10$ distilled
+text tokens; values close to $1$ indicate the cross-attention does
+not discriminate between distilled tokens conditional on input.
+
+\paragraph{Probe C -- prediction divergence under text ablation.}
+For each batch we forecast with full text and with
+\texttt{text\_input\_ids=None}, average $10$ samples from the
+flow-matching head per setting, and record the mean squared
+difference of the two forecasts:
+\begin{equation}
+\widehat{D} \;=\; \bbE_{b}\,\bigl\|\,\yhat_{\text{text}}(b)
+   - \yhat_{\text{none}}(b)\,\bigr\|_2^{2}.
+\label{eq:divergence}
+\end{equation}
+$\widehat D$ is in standardised target units; a value two orders of
+magnitude below the test MSE means the text path contributes nothing
+to the forward pass for this cell.
+
+% =====================================================================
+\section{Statistical Protocol}
+\label{sec:stats}
+
+We pair every condition cell with its \Cone{} counterpart at the same
+$(\text{domain},\text{horizon},\text{seed})$ tuple, compute
+$\Delta_i = \mathrm{MSE}_i(c) - \mathrm{MSE}_i(\Cone)$, and obtain
+$95\%$ confidence intervals via the paired
+bootstrap~\citep{efron1993bootstrap} with $10{,}000$ resamples.
+$p$-values are two-sided over the bootstrap distribution.  All
+intervals reported in the main tables are computed per-architecture
+\emph{and per-backbone} on $108$ paired cells; full per-backbone
+breakdowns appear in \cref{sec:perbackbone_full}.
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+
+\input{tab_main}
+
+\input{tab_probes}
+
+The main results in \cref{tab:main} separate the eight conditions
+into two clean clusters along the prior axis, with the text axis
+having no detectable effect.  Across every backbone, every
+horizon, and almost every domain, the text-only conditions
+($\Cthree, \Cfour, \Ceight$) sit on top of the original baseline
+$\Cone$ within $\pm 0.06\%$ of MSE, while the prior-zeroed
+conditions ($\Cnine, \Ctwo, \Cfive$) shift MSE by up to $+31.1\%$
+for \TaTS{} and $+2.5\%$ for \MMTSF{}.  Even the oracle condition
+\Ceight{}, which embeds the ground-truth future as a templated text
+string, fails to improve any of the three models: the largest move
+is \Aurora{}'s $+0.024\%$ ($p=0.337$).  Bootstrap confidence
+intervals are tight and either straddle zero or move only in the
+third decimal of MSE.
+
+\Cnine{}, \Ctwo{}, and \Cfive{} produce \emph{numerically identical}
+MSEs on \TaTS{} and \MMTSF{}: same prior treatment, three different
+text values (real, empty, constant), no detectable difference in
+forecasts.  \Aurora{} is unaffected by \Cnine{} because $\pprior$
+does not appear in \cref{eq:aurora}, and is moved by less than
+$0.03\%$ under \Ctwo{}/\Cfive{}.  The two-axis design therefore
+\emph{localises} the published ``multimodal lift'' inside a numeric
+residual that has no semantic-text content.
+
+\paragraph{\Aurora{} is content-blind.}
+Across the $108$ cells in our \Aurora{} grid, MSE for $\Cone$,
+$\Cnine$, and $\Csix$ is bit-identical to $13$ significant figures.
+\Cref{tab:probes} reports the three probes
+(\cref{eq:gradnorm,eq:entropy,eq:divergence}).  Probe~A confirms the
+text pathway is wired in -- gradients reach the distilled text
+tokens with magnitudes $\widehat g \in [0.07,\,0.27]$ across
+conditions -- but Probe~B reports $\widehat H = 0.975 \pm 0.01$
+regardless of input (the cross-attention is essentially uniform
+over the $10$ distilled text tokens), and Probe~C reports
+$\widehat D \le 0.06$ everywhere, two orders of magnitude below
+test-MSE scale.  The text pathway is computed but its forward-pass
+contribution is null.
+
+% =====================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{The published unimodal gap is the prior gap.}
+In the original \TaTS{} and \MMTSF{} papers, the headline result is
+the $\Cone\!-\!\Csix$ gap: $+5.24\%$ for \TaTS{} and $+1.76\%$ for
+\MMTSF{} in our re-runs.  But \Csix{} drops both the text channel
+\emph{and} the numeric-prior fusion (\cref{sec:protocol}).  Comparing
+with \Cnine{}, which drops only the numeric prior, we see $+31.06\%$
+and $+2.44\%$ respectively -- already accounting for and exceeding
+the headline gap.  The published gap is attributable to numeric-prior
+fusion, not to text semantics.
+
+\paragraph{Why does \Aurora{} still claim multimodal gains?}
+\Aurora{} never reads $\pprior$, yet its public results report a
+small \Cone{}--\Csix{} improvement on \TimeMMD{}.  Our re-runs
+reproduce that small effect.  But the text pathway in the released
+checkpoint has near-uniform cross-attention and zero forward-pass
+effect on the test grid, even though gradients flow.  A trained text
+path that is not content-discriminative is structurally similar to a
+frozen no-op: it cannot worsen predictions, and on \TimeMMD{} it
+cannot improve them.
+
+\paragraph{Architectural archaeology.}
+\TaTS{}'s training loop concatenates the projected text embedding
+with the numeric input under a \texttt{.detach()} call (line 519 of
+\texttt{exp\_long\_term\_forecasting.py}), severing the gradient
+into $\psi$ even though an optimiser step on $\psi$ is invoked every
+iteration.  Combined with the residual blend in \cref{eq:tats}, this
+means a \TaTS{} run on \TimeMMD{} is structurally incapable of
+learning to use text for prediction beyond random projection
+variance.  Full code-level audit in \cref{sec:detach_appendix}.
+
+\paragraph{Limitations.}
+We test three architectures.  \Aurora{}'s pretraining corpus is
+large and only partially documented; we cannot rule out \TimeMMD{}
+contamination at pretraining time (\cref{sec:aurora_pretrain}).  Our
+perturbation set covers row-level text variations; we do not vary
+the LLM that generated $\pprior$.  All claims are about \TimeMMD{};
+the generality of the behavioural ladder to other text--time-series
+benchmarks is an open question.
+
+\paragraph{Implications for benchmark design.}
+A multimodal time-series benchmark whose ``text'' channel is read by
+the model only through a residual that also consumes a numeric
+column will report ``multimodal'' lifts even if the text is empty.
+This echoes parallel critical evaluations of (unimodal) time-series
+foundation models~\citep{zhang2025tsfmready}: small, careful
+baselines and falsification controls often outperform expensive
+multimodal machinery on the very benchmarks built for them.  We
+release our perturbation generator, runner harnesses, and probe
+instrumentation as a drop-in evaluation suite, and we recommend that
+any future text--time-series benchmark report a prior-zeroed control
+(\Cnine{}) and an empty-text control (\Ctwo{}) alongside any
+``multimodal'' headline.
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+The three publicly released multimodal time-series architectures on
+\TimeMMD{} appear to use natural-language context.  Under a two-axis
+perturbation protocol with $7{,}776$ controlled runs and three
+mechanistic probes for the foundation-model entry, we find that text
+content moves MSE by less than $0.06\%$ in every condition; that the
+single perturbation that does move MSE is zeroing a numeric prior
+column unrelated to language; and that \Aurora{}'s text pathway has
+near-uniform cross-attention and produces bit-identical predictions
+with and without text on the entire test grid.  We release the
+benchmark suite to make these controls a default rather than an
+afterthought.
+
+\bibliographystyle{icml2026}
+\bibliography{references}
+
+\appendix
+\input{appendix}
+
+\end{document}

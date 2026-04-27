@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2023/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper.aux
+The style file: icml2026.bst
+Database file #1: references.bib
+Warning--empty booktitle in efron1993bootstrap
+You've used 13 entries,
+            2773 wiz_defined-function locations,
+            648 strings with 7236 characters,
+and the built_in function-call counts, 6692 in all, are:
+= -- 505
+> -- 568
+< -- 3
++ -- 192
+- -- 177
+* -- 562
+:= -- 1061
+add.period$ -- 39
+call.type$ -- 13
+change.case$ -- 97
+chr.to.int$ -- 11
+cite$ -- 27
+duplicate$ -- 296
+empty$ -- 502
+format.name$ -- 195
+if$ -- 1374
+int.to.chr$ -- 3
+int.to.str$ -- 1
+missing$ -- 12
+newline$ -- 73
+num.names$ -- 52
+pop$ -- 232
+preamble$ -- 1
+purify$ -- 83
+quote$ -- 0
+skip$ -- 215
+stack$ -- 0
+substring$ -- 26
+swap$ -- 25
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 143
+warning$ -- 1
+while$ -- 39
+width$ -- 0
+write$ -- 164
+(There was 1 warning)

@@ -1,0 +1,295 @@
+% =====================================================================
+%  Appendix
+% =====================================================================
+%
+% Sections in this appendix:
+%   A  Upstream patches and reproducibility audit
+%   B  Perturbation generation details and example texts
+%   C  Probe output invariance check
+%   D  Per-backbone bootstrap confidence intervals
+%   E  Bit-identical cells: direct verification
+%   F  Architectural diagnostic: TaTS's detach() edge
+%   G  What about Aurora's pretraining?
+%   H  Per-domain breakdown
+%   I  Per-horizon breakdown
+%
+% Tables in this appendix:
+%   tab:perbb_*   per-backbone (auto-generated, included from
+%                   tab_appendix_perbackbone.tex)
+%   tab:perdom_*  per-domain  (auto-generated, included from
+%                   tab_appendix_perdomain.tex)
+%   tab:perhz_*   per-horizon (auto-generated, included from
+%                   tab_appendix_perhorizon.tex)
+%   tab:perbackbone   bootstrap CIs, hand-curated
+%   tab:perturbation_examples  one example string per condition for one
+%                              chosen domain (Health), hand-curated.
+
+\section{Upstream Patches and Reproducibility Audit}
+\label{sec:patches}
+
+We pin every upstream repository to a specific commit and apply $13$
+small patches via \texttt{code/apply\_repo\_patches.py}.  Patches are
+mechanically diffable; this section summarises the categories and their
+consequences for reproducibility.
+
+\paragraph{Data-loading correctness.}  \TimeMMD{} ships rows whose
+textual columns are sometimes empty strings.  pandas's default
+\texttt{read\_csv} converts these to \texttt{NaN}, which several
+upstream loaders then silently replace with $0$ or with the string
+\texttt{"nan"} -- both of which destroy the meaning of our \Ctwo{}
+(\textsc{empty}) condition.  We pass \texttt{keep\_default\_na=False}
+in every \texttt{read\_csv} call in the three repos, and we remove a
+code path in \MMTSF{} that \texttt{fillna("nan")}s the text column.
+
+\paragraph{API drift.}  All three repos were released against
+pandas\,1.x.  We backport four idioms (\texttt{drop(columns=)} instead
+of the deprecated positional second argument, \texttt{Series.iloc[]}
+casting, etc.) so the same code path runs on pandas\,2.x without
+behavioural changes.
+
+\paragraph{Architectural unimodal switch.}  \TaTS{} and \MMTSF{} ship
+CLI flags for unimodal evaluation
+(\texttt{--text\_emb 0 --prior\_weight 0} and \texttt{--prompt\_weight 0}
+respectively).  \Aurora{} hard-codes the text path to always run.  We
+add a \texttt{--no\_text} flag to \Aurora{}'s run script that sets
+\texttt{text\_input\_ids=None} before calling the model's
+\texttt{generate}.  By construction this is the only path the model
+exposes for skipping the text branch; \cref{sec:probe_validation}
+verifies it matches default-text behaviour bit-exactly on every
+\TimeMMD{} cell.
+
+\paragraph{Backbone registration.}  \TaTS{}'s
+\texttt{exp/exp\_basic.py} registers only \textsc{iTransformer}.  We
+register the eight additional backbones present in the same source
+tree (\textsc{Autoformer}, \textsc{DLinear}, \textsc{Informer},
+\textsc{FiLM}, \textsc{FEDformer}, \textsc{PatchTST},
+\textsc{Crossformer}, \textsc{Transformer}).
+
+\paragraph{Determinism and seeding.}  Each runner sets the model's
+RNG via the published seed flag.  We set \texttt{torch.manual\_seed}
+and \texttt{numpy.random.seed} per cell.  The orchestrator also fixes
+\texttt{CUDA\_VISIBLE\_DEVICES} per shard; we did not pin
+\texttt{torch.use\_deterministic\_algorithms(True)} because that
+disagrees with one of \MMTSF{}'s flash-attention paths.  \Aurora{}'s
+flow-matching head averages $100$ samples for inference; with seeded
+sampling we obtain bit-identical predictions per cell across re-runs
+(\cref{sec:bit_identical}).
+
+\paragraph{Reproducibility.}  The end-to-end sweep is sharded across
+GPUs and resumable; total wall clock for the $7{,}776$-cell sweep is
+$\sim 92$ A10G-hours.  The full log of CLI invocations, git SHAs, and
+returned MSE/MAE per cell is in our \texttt{sweep\_log.jsonl}
+(released alongside the code).
+
+% =====================================================================
+\section{Perturbation Generation Details}
+\label{sec:perturbations}
+
+\paragraph{Row-level invariants.}  For all data-axis perturbations
+(\Ctwo{}--\Cfive{}, \Ceight{}, \Cnine{}) we preserve the row count,
+the date column, and the numeric target column.  Our generator
+\texttt{code/generate\_perturbations.py} runs a post-hoc validator
+that diffs every perturbed CSV against the original on the columns
+that should be unchanged.
+
+\paragraph{\Cthree{} (\textsc{shuffled}).}  We permute the text
+column within the same domain using a NumPy random generator seeded
+by the RunSpec seed.  This is the only condition whose CSV content
+depends on the seed; all other conditions live under
+\texttt{seed0/} on disk.
+
+\paragraph{\Cfour{} (\textsc{cross-domain}).}  We use a fixed pairing
+$f$:\textsc{Agriculture}$\!\to\!$\textsc{Climate},
+\textsc{Climate}$\!\to\!$\textsc{Agriculture}, and so on.  For each
+target row we pull the text from the source-domain row whose
+\texttt{date} is closest to the target row's date (resolving ties
+deterministically).  This preserves natural English while breaking
+topic alignment.
+
+\paragraph{\Ceight{} (\textsc{oracle}).}  For each row in the test
+window we substitute a templated string of the form
+\texttt{"The next $H$ values are $y_1, y_2, \ldots, y_H$."}  using
+the ground-truth values.  The substitution is applied to train/val
+rows -- rolled back by $H$ steps -- so the model sees consistent
+oracle structure during fine-tuning (for \TaTS{} and \MMTSF{}).  For
+\Aurora{} the test window is what matters.
+
+\paragraph{\Cnine{} (\textsc{zero-priors}).}  We set every entry of
+\texttt{prior\_history\_avg} to $0.0$.  \Aurora{} does not consume
+this column at all (verified by
+\texttt{grep -n prior\_history Aurora/}), so \Cnine{} is by
+construction a no-op for \Aurora{} -- exactly the behaviour observed
+to bit precision.
+
+\paragraph{Why \Ctwo{} and \Cfive{} also zero the prior.}  Following
+the original \TimeMMD{} convention, the perturbations that strip
+``text-derived information'' do so for all text-derived numeric
+columns as well, including \texttt{prior\_history\_avg}.  This is
+what makes \Ctwo{}/\Cfive{}/\Cnine{} a clean three-way comparison:
+prior is held at zero in all three, and text varies between empty,
+constant, and intact.  If the model reads text at all, these three
+should differ.
+
+\paragraph{Examples.}  \Cref{tab:perturbation_examples} shows one
+example row from each condition for the \textsc{Public\_Health}
+domain (week of 2013-02-04, weighted ILI percentage forecasting).
+
+\input{tab_perturbation_examples}
+
+% =====================================================================
+\section{Probe Output Invariance}
+\label{sec:probe_validation}
+
+We run \Aurora{}'s \texttt{generate} call twice on a fixed batch with
+the same seed: once with no hooks, once with both gradient-norm and
+attention-entropy hooks attached.  Forward outputs match
+bit-exactly (\texttt{torch.allclose(rtol=0,atol=0)}); the hook
+attachment does not perturb the forward graph.  Code in
+\texttt{code/aurora\_probes.py::validate\_invariance}.
+
+% =====================================================================
+\section{Per-backbone Bootstrap Confidence Intervals}
+\label{sec:perbackbone_bootstrap}
+
+A condensed view is given in \cref{tab:perbackbone_compact}, which
+reports paired-bootstrap means and $95\%$ confidence intervals against
+\Cone{}, broken out per backbone.  All intervals use $10{,}000$
+resamples on $108$ paired cells per (model, backbone, condition).
+The cluster structure of \cref{tab:main} is preserved across
+every backbone: text-content perturbations (\Cthree{}, \Cfour{},
+\Ceight{}) have intervals tight to zero, while prior-zeroing
+perturbations (\Ctwo{}, \Cfive{}, \Cnine{}) have intervals visibly
+above zero.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.16}
+\caption{Mean $\Delta\text{MSE}$ vs.\ \Cone{} with $95\%$ paired
+bootstrap CI ($n\!=\!108$ paired cells, $10{,}000$ resamples).
+Statistically-significant differences ($p\!<\!0.01$) marked $\star$.
+Source: \texttt{summaries/bootstrap\_per\_backbone.csv}.}
+\label{tab:perbackbone_compact}
+\begin{tabular}{l l r r}
+\toprule
+\textbf{Model/Bbone} & \textbf{Cond.} & \textbf{$\Delta\overline{\text{MSE}}$} & \textbf{$95\%$ CI} \\
+\midrule
+\multirow{4}{*}{\Aurora{}}            & \Ctwo{}    & $\phantom{-}0.00202\,\star$ & $[+0.0003,\,+0.0041]$\\
+                                      & \Cthree{}  & $\phantom{-}0.00032$        & $[-0.00007,\,+0.0008]$\\
+                                      & \Cfour{}   & $-0.00051$                  & $[-0.0028,\,+0.0016]$\\
+                                      & \Cnine{}   & $\phantom{-}0$              & $[\phantom{-}0,\,0]$\\
+\midrule
+\multirow{4}{*}{\MMTSF{}/DLin}        & \Ctwo{}    & $\phantom{-}0.297\,\star$   & $[+0.227,\,+0.374]$\\
+                                      & \Cthree{}  & $\phantom{-}0.00071\,\star$ & $[+0.0002,\,+0.0013]$\\
+                                      & \Cnine{}   & $\phantom{-}0.298\,\star$   & $[+0.227,\,+0.374]$\\
+                                      & \Csix{}    & $\phantom{-}0.331\,\star$   & $[+0.201,\,+0.480]$\\
+\midrule
+\multirow{4}{*}{\MMTSF{}/Inf}         & \Ctwo{}    & $\phantom{-}0.204\,\star$   & $[+0.120,\,+0.303]$\\
+                                      & \Cthree{}  & $\phantom{-}0.018$          & $[+0.001,\,+0.037]$\\
+                                      & \Cnine{}   & $\phantom{-}0.211\,\star$   & $[+0.123,\,+0.301]$\\
+                                      & \Csix{}    & $\phantom{-}0.201\,\star$   & $[+0.121,\,+0.292]$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A full per-(model, backbone, condition) breakdown -- including all
+nine conditions and including \MMTSF{}/iTransformer and the three
+\TaTS{} backbones -- is provided in \cref{sec:per_horizon}.
+
+% =====================================================================
+\section{Bit-Identical Cells: Direct Verification}
+\label{sec:bit_identical}
+
+For \Aurora{}, $108/108$ paired cells satisfy $\text{MSE}(\Cone{}) =
+\text{MSE}(\Cnine{}) = \text{MSE}(\Csix{})$ to $13$ significant
+figures; the bootstrap interval is $[0,0]$ exactly because every
+paired difference is exactly zero.  For \TaTS{} on \textsc{DLinear}
+and \textsc{iTransformer}, $\Ctwo$, $\Cfive$, and $\Cnine$ give
+identical predicted forecasts cell-by-cell because of the
+architectural artefact described in \cref{sec:detach_appendix};
+these match to $\sim\!13$ significant figures of MSE rather than to
+bit precision (small floating-point non-associativity in the
+forward pass).
+
+% =====================================================================
+\section{Architectural Diagnostic: \TaTS{}'s \texttt{detach()} Edge}
+\label{sec:detach_appendix}
+
+In \TaTS{}'s training loop
+(\texttt{repos/TaTS/exp/exp\_long\_term\_forecasting.py:519}):
+\begin{verbatim}
+batch_x = torch.cat(
+    [batch_x, prompt_emb], dim=-1
+).detach()
+\end{verbatim}
+\noindent
+The \texttt{.detach()} severs gradient flow into \texttt{prompt\_emb},
+which is the output of \texttt{self.mlp(text\_embeddings)}.
+\TaTS{}'s training loop nevertheless instantiates a separate optimiser
+for \texttt{self.mlp} and calls \texttt{model\_optim\_mlp.step()}
+every iteration -- but those parameters never receive gradients.
+
+\paragraph{Consequence.}  The text-projection MLP $\psi$ stays at
+random initialisation throughout fine-tuning.  The downstream backbone
+receives a random projection of frozen-LLM features as additional
+input channels; over training it learns to assign small or zero
+weight to those channels because they cannot reduce loss reliably.
+At test time, with text content varied (\Ctwo{}/\Cfive{}/\Cnine{})
+the random projection maps to slightly different vectors but the
+trained backbone has already collapsed those channels to near-zero
+contribution.  This is a sufficient mechanical explanation for the
+bit-identical behaviour we observe in \cref{tab:main}.
+
+\paragraph{Significance.}  This is not a takedown of \TaTS{} as a
+research artefact; the released code may differ from the authors'
+internal codebase.  We highlight it because anyone re-deriving a
+``multimodal'' lift from \TaTS{}'s public code is, structurally,
+re-deriving the prior-residual gap rather than a text gap.
+
+% =====================================================================
+\section{What about Aurora's Pretraining?}
+\label{sec:aurora_pretrain}
+
+\Aurora{}'s zero-shot regime means our findings concern the released
+\emph{checkpoint}'s use of text on \TimeMMD{}.  We do not re-pretrain
+\Aurora{}; we cannot rule out training-time contamination of
+\TimeMMD{} content into the pretraining corpus.  The fact that
+$\Cone{}/\Cnine{}/\Csix{}$ are bit-identical and $\Ctwo{}/\Cfive{}$
+are within $0.03\%$ of $\Cone{}$ tells us that, conditional on the
+released checkpoint, text content is not a behavioural lever on this
+benchmark.  Our claim is conditional on these checkpoints; we do not
+claim that no text--time-series foundation model can use text.
+
+% =====================================================================
+\section{Per-backbone, Per-domain, Per-horizon Tables}
+\label{sec:per_horizon}
+
+The next three subsections expand \cref{tab:main} along three
+axes: (i) per backbone, (ii) per domain, and (iii) per horizon.  In
+every breakdown, the two-cluster pattern from the main paper is
+preserved.  Tables are auto-generated from the locked summaries by
+\texttt{paper/figures/make\_appendix\_tables.py}.
+
+\subsection{Per-backbone}
+\label{sec:perbackbone_full}
+
+\input{tab_appendix_perbackbone}
+
+\subsection{Per-domain}
+\label{sec:perdomain_full}
+
+\input{tab_appendix_perdomain}
+
+\subsection{Per-horizon}
+\label{sec:perhorizon_full}
+
+The horizons available depend on the source domain's sampling
+frequency: \textsc{Environment} (daily) uses
+$\{48, 96, 192, 336\}$, \textsc{Health}/\textsc{Energy} (weekly) use
+$\{12, 24, 36, 48\}$, and the remaining six monthly domains use
+$\{6, 8, 10, 12\}$.  The table below merges across domains, so
+columns with a particular horizon $H$ aggregate over only the
+domains that include that horizon.
+
+\input{tab_appendix_perhorizon}
