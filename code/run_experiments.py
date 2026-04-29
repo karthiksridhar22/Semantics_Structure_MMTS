@@ -105,7 +105,8 @@ DEFAULT_SEEDS = {
 ALL_MODELS = ['aurora', 'tats', 'mmtsflib']
 ALL_CONDITIONS = [
     'C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
-    'C5_constant', 'C6_unimodal', 'C7_null', 'C8_oracle', 'C9_zero_priors',
+    'C5_constant', 'C6_unimodal', 'C8_oracle', 'C9_zero_priors',
+    'C10_empty_keep_priors', 'C11_constant_keep_priors',
 ]
 ALL_DOMAINS = ['Agriculture', 'Climate', 'Economy', 'Energy', 'Environment',
                'Health', 'Security', 'SocialGood', 'Traffic']

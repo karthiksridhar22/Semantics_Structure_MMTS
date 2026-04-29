@@ -174,7 +174,8 @@ SEEDS = {
 }
 
 CONDITIONS = ['C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
-              'C5_constant', 'C7_null', 'C8_oracle', 'C9_zero_priors']
+              'C5_constant', 'C7_null', 'C8_oracle', 'C9_zero_priors',
+              'C10_empty_keep_priors', 'C11_constant_keep_priors']
 # C6 absent by design — triggered via CLI at run-time.
 
 # Conditions whose CSV content depends on the seed (i.e. use an RNG).
@@ -386,6 +387,34 @@ def c8_oracle(df: pd.DataFrame, text_cols, target='OT',
     return out
 
 
+def c11_constant_keep_priors(df: pd.DataFrame, text_cols,
+                             constant=C5_CONSTANT_STR, **_) -> pd.DataFrame:
+    """C11: text = constant string, numeric priors KEPT (unlike C5 which zeros them).
+
+    Parallel to C10 vs C2: isolates the text-encoder path under a constant
+    non-empty text while leaving prior_history_avg intact. Comparing C11 vs
+    C5 quantifies the contribution of priors; C11 vs C1 quantifies the
+    marginal value of real text content given priors are still available.
+    """
+    out = df.copy()
+    _set_cols(out, text_cols, constant)
+    return out
+
+
+def c10_empty_keep_priors(df: pd.DataFrame, text_cols, **_) -> pd.DataFrame:
+    """C10: text = '' but numeric priors KEPT (unlike C2 which zeros priors).
+
+    Isolates the contribution of the text-encoder path while leaving the
+    numeric prior_history_avg signal intact. Comparing C10 vs C2 quantifies
+    how much of the C2 degradation is due to losing priors (not text).
+    Comparing C10 vs C1 quantifies the marginal value of text content given
+    that priors are still available.
+    """
+    out = df.copy()
+    _set_cols(out, text_cols, '')
+    return out
+
+
 def c9_zero_priors(df: pd.DataFrame, null_numeric_cols, **_) -> pd.DataFrame:
     """C9: original text + zeroed numeric priors.
 
@@ -410,6 +439,8 @@ PERTURB_FNS = {
     'C7_null':        c7_null,
     'C8_oracle':      c8_oracle,
     'C9_zero_priors': c9_zero_priors,
+    'C10_empty_keep_priors': c10_empty_keep_priors,
+    'C11_constant_keep_priors': c11_constant_keep_priors,
 }
 
 
@@ -444,6 +475,7 @@ def validate_perturbation(original: pd.DataFrame, perturbed: pd.DataFrame,
     # For C2/C5/C7/C9: they SHOULD be zero (if present).
     should_be_zero = condition in ('C2_empty', 'C5_constant', 'C7_null',
                                    'C9_zero_priors')
+    # C10 empties text but keeps priors — text changes allowed, priors must NOT change.
 
     for col in original.columns:
         orig_vals = original[col]
@@ -453,6 +485,14 @@ def validate_perturbation(original: pd.DataFrame, perturbed: pd.DataFrame,
             if condition == 'C9_zero_priors':
                 if not orig_vals.equals(new_vals):
                     errors.append(f'{col}: text changed under C9 but should NOT have')
+            # C10 must zero out text (round-trip already verifies content '')
+            elif condition == 'C10_empty_keep_priors':
+                if not (new_vals.astype(str).str.len() == 0).all():
+                    errors.append(f'{col}: expected all empty under C10')
+            # C11 must set text to the constant string.
+            elif condition == 'C11_constant_keep_priors':
+                if not (new_vals.astype(str) == C5_CONSTANT_STR).all():
+                    errors.append(f'{col}: expected all == constant under C11')
             continue  # other conditions are allowed to change text
         if col in allowed_null_numeric_cols:
             if should_be_zero:
@@ -471,7 +511,7 @@ def validate_perturbation(original: pd.DataFrame, perturbed: pd.DataFrame,
     # Round-trip check: read back from disk with keep_default_na=False (the
     # setting a patched downstream loader will use) and verify text cols
     # are correctly preserved. This catches the '' -> NaN CSV bug.
-    if out_path is not None and condition == 'C2_empty':
+    if out_path is not None and condition in ('C2_empty', 'C10_empty_keep_priors'):
         rt = pd.read_csv(out_path, keep_default_na=False)
         for c in allowed_text_cols:
             if c in rt.columns:
@@ -479,7 +519,7 @@ def validate_perturbation(original: pd.DataFrame, perturbed: pd.DataFrame,
                 non_empty = rt[c].astype(str).str.len() > 0
                 if non_empty.any():
                     n_bad = non_empty.sum()
-                    errors.append(f'C2 round-trip: {c} has {n_bad} non-empty values '
+                    errors.append(f'{condition} round-trip: {c} has {n_bad} non-empty values '
                                   f'after re-read (expected all "")')
 
     return errors

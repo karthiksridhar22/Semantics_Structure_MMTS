@@ -58,7 +58,7 @@ TIME_MMD_HORIZONS = {
 
 ALL_DOMAINS = list(TIME_MMD_HORIZONS.keys())
 ALL_CONDITIONS = ['C1_original', 'C2_empty', 'C3_shuffled', 'C4_crossdomain',
-                  'C5_constant', 'C6_unimodal', 'C7_null', 'C8_oracle',
+                  'C5_constant', 'C6_unimodal', 'C8_oracle',
                   'C9_zero_priors']
 
 # Conditions excluded from paper tables/figures by default (still loaded
@@ -329,6 +329,31 @@ def df_to_latex_colored(df: pd.DataFrame, *,
     )
     return body
 
+def backbone_condition_domain_table(df: pd.DataFrame, backbone: str,
+                                     metric: str = 'mse') -> pd.DataFrame:
+    """
+    For a given backbone:
+    rows = condition
+    cols = domain
+    values = mean over (seed, horizon)
+    """
+    sub = df[df['backbone'] == backbone].copy()
+    if sub.empty:
+        return pd.DataFrame()
+
+    # average across seeds + horizons
+    table = (
+        sub.groupby(['condition', 'domain'])[metric]
+        .mean()
+        .unstack('domain')
+    )
+
+    # enforce ordering
+    table = table.reindex(ALL_CONDITIONS)
+    table = table.reindex(columns=[d for d in ALL_DOMAINS if d in table.columns])
+
+    return table
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -414,6 +439,21 @@ def main():
         if dom_tab.empty:
             continue
         dom_tab.to_csv(args.out_dir / f'per_domain_{model}.csv')
+
+    print('\n=== Backbone-specific condition × domain tables ===')
+
+        TARGET_BACKBONES = ["DLinear", "iTransformer", "Informer"]
+
+    for bb in TARGET_BACKBONES:
+        tab = backbone_condition_domain_table(df_paper, bb, args.metric)
+        if tab.empty:
+            print(f"  Skipping {bb} (no data)")
+            continue
+
+        out_path = args.out_dir / f'cond_domain_{bb}.csv'
+        tab.to_csv(out_path)
+
+        print(f'  wrote {out_path}')
 
     print('\n=== Bootstrap (model-level) vs C1_original ===')
     boot = bootstrap_vs_reference(df_paper, ref='C1_original', metric=args.metric)
