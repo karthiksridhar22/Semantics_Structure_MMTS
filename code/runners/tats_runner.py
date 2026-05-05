@@ -128,6 +128,12 @@ def run_tats(spec: RunSpec) -> RunResult:
         '--patience', str(patience),
         '--batch_size', str(batch_size),
     ]
+    # P-fix-detach: opt-in flag to keep gradient flow through self.mlp
+    # (text-projection MLP psi). Default OFF preserves upstream behaviour
+    # and bit-equivalence with pre-existing result JSONs. See the audit
+    # in apply_repo_patches.py and PAPER_PLAN_V2.md Appendix F.
+    if spec.extra_args.get('fix_text_grad', False):
+        cli.append('--fix_text_grad')
     result.cli_args = cli
 
     returncode, stdout, stderr = run_subprocess(

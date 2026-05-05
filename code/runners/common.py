@@ -142,7 +142,16 @@ def _asdict_nested(obj):
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 REPOS = PROJECT_ROOT / 'repos'
 DATA_ROOT = PROJECT_ROOT / 'data'
-RESULTS_ROOT = PROJECT_ROOT / 'results'
+# RESULTS_ROOT is overridable via the PROBE_RESULTS_ROOT env var so that
+# the TaTS .detach()-fix sweep can write to a separate tree (e.g.
+# `results_tats_fixed/`) without colliding with the canonical `results/`
+# directory. Relative paths are interpreted relative to PROJECT_ROOT.
+_results_env = os.environ.get('PROBE_RESULTS_ROOT', '').strip()
+if _results_env:
+    _p = Path(_results_env)
+    RESULTS_ROOT = _p if _p.is_absolute() else (PROJECT_ROOT / _p)
+else:
+    RESULTS_ROOT = PROJECT_ROOT / 'results'
 
 
 def result_path(spec: RunSpec) -> Path:
@@ -412,7 +421,7 @@ def clear_stale_markers() -> int:
     if not RESULTS_ROOT.exists():
         return 0
     for m in RESULTS_ROOT.rglob('*.running'):
-        m.unlink()
+        m.unlink(missing_ok=True)  # concurrent shards may race to delete the same file
         count += 1
     return count
 

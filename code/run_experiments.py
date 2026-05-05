@@ -257,6 +257,14 @@ def main():
                          'delete after each cell. ~60-170 MB/cell × 15k+ '
                          'cells = >1 TB if kept. Enable only for a small '
                          'subset you plan to probe later.')
+    ap.add_argument('--fix_text_grad', action='store_true',
+                    help='TaTS only: pass --fix_text_grad to run.py so the '
+                         'two .detach() calls in train() that sever gradient '
+                         'flow into the text-projection MLP psi are skipped. '
+                         'Default off (preserves upstream TaTS behaviour and '
+                         'bit-equivalence with existing result JSONs). When '
+                         'on, write results to a separate tree by exporting '
+                         'PROBE_RESULTS_ROOT=results_tats_fixed before launch.')
     ap.add_argument('--dry_run', action='store_true',
                     help='Print planned grid without executing')
     ap.add_argument('--force', action='store_true',
@@ -301,6 +309,8 @@ def main():
         extra_args['batch_size'] = args.batch_size
     if args.preserve_checkpoints:
         extra_args['preserve_checkpoints'] = True
+    if args.fix_text_grad:
+        extra_args['fix_text_grad'] = True
 
     specs = build_specs(args.models, args.conditions, seeds_per_model,
                         args.domains, args.pred_lens,
