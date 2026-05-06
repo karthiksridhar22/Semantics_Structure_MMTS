@@ -1,0 +1,14 @@
+Completeness Report
+============================================================
+
+aurora/default                   972/972   (100.0%)  missing=0
+tats/DLinear                     972/972   (100.0%)  missing=0
+tats/Informer                    972/972   (100.0%)  missing=0
+tats/iTransformer                972/972   (100.0%)  missing=0
+mmtsflib/DLinear                 972/972   (100.0%)  missing=0
+mmtsflib/Informer                972/972   (100.0%)  missing=0
+mmtsflib/iTransformer            972/972   (100.0%)  missing=0
+
+TOTAL EXPECTED: 6804
+TOTAL HAVE:     6804
+TOTAL MISSING:  0

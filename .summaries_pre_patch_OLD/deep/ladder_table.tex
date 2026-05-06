@@ -1,0 +1,21 @@
+% Requires: \usepackage{booktabs, xcolor}
+\begin{table}[t]
+\caption{Behavioural ladder: mean MSE per condition across all (domain, horizon, seed, backbone). Coloured deltas vs.\ $C_1$.}
+\label{tab:ladder}
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Condition & AURORA & MMTSFLIB & TATS \\
+\midrule
+C1\_original & 8.5529 & 13.7948 & 13.3074 \\
+C9\_zero\_priors & 8.5529 {\tiny\textcolor{teal}{(0.0\%)}} & 14.1319 {\tiny\textcolor{red}{(+2.4\%)}} & 17.4403 {\tiny\textcolor{red}{(+31.1\%)}} \\
+C3\_shuffled & 8.5532 {\tiny\textcolor{red}{(+0.0\%)}} & 13.7986 {\tiny\textcolor{red}{(+0.0\%)}} & 13.3078 {\tiny\textcolor{red}{(+0.0\%)}} \\
+C4\_crossdomain & 8.5524 {\tiny\textcolor{teal}{(-0.0\%)}} & 13.7943 {\tiny\textcolor{teal}{(-0.0\%)}} & 13.3078 {\tiny\textcolor{red}{(+0.0\%)}} \\
+C8\_oracle & 8.5549 {\tiny\textcolor{red}{(+0.0\%)}} & 13.8027 {\tiny\textcolor{red}{(+0.1\%)}} & 13.3075 {\tiny\textcolor{red}{(+0.0\%)}} \\
+C2\_empty & 8.5549 {\tiny\textcolor{red}{(+0.0\%)}} & 14.1351 {\tiny\textcolor{red}{(+2.5\%)}} & 17.4402 {\tiny\textcolor{red}{(+31.1\%)}} \\
+C5\_constant & 8.5555 {\tiny\textcolor{red}{(+0.0\%)}} & 14.1375 {\tiny\textcolor{red}{(+2.5\%)}} & 17.4398 {\tiny\textcolor{red}{(+31.1\%)}} \\
+C6\_unimodal & 8.5529 {\tiny\textcolor{teal}{(0.0\%)}} & 14.0380 {\tiny\textcolor{red}{(+1.8\%)}} & 14.0043 {\tiny\textcolor{red}{(+5.2\%)}} \\
+\bottomrule
+\end{tabular}
+\end{table}

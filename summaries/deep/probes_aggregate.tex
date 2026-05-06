@@ -1,0 +1,21 @@
+% Requires: \usepackage{booktabs}
+\begin{table}[t]
+\caption{Aurora mechanistic probes by condition. GradNorm: $\|\partial L/\partial \mathrm{TextEncoder.out}\|_2$. $H/\log L_k$: cross-attention entropy normalised by $\log(L_k=10)$ ($1.0 = $ uniform). MaxAttn: max softmax weight over text tokens. DivMSE: $\|\,f(x_{\text{ts}}, t)-f(x_{\text{ts}},\varnothing)\,\|_2^2$. Means across $9 \times 3 = 27$ cells per row.}
+\label{tab:probes}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Condition & GradNorm & $H/\log L_k$ & MaxAttn & DivMSE \\
+\midrule
+C1\_original & 0.1517 & 0.975 & 0.159 & 0.0407 \\
+C9\_zero\_priors & 0.2649 & 0.975 & 0.159 & 0.0283 \\
+C3\_shuffled & 0.1548 & 0.975 & 0.159 & 0.0354 \\
+C4\_crossdomain & 0.0721 & 0.975 & 0.159 & 0.0351 \\
+C8\_oracle & 0.1331 & 0.976 & 0.158 & 0.0576 \\
+C2\_empty & 0.0744 & 0.975 & 0.159 & 0.0400 \\
+C5\_constant & 0.1557 & 0.976 & 0.158 & 0.0444 \\
+C6\_unimodal & 0.0797 & 0.975 & 0.159 & 0.0348 \\
+\bottomrule
+\end{tabular}
+\end{table}

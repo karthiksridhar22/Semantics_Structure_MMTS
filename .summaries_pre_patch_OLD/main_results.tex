@@ -1,0 +1,22 @@
+% Requires: \usepackage{booktabs, xcolor}
+\begin{table}[t]
+\caption{Main results: mean MSE across all (backbone, domain, horizon, seed) cells. Bold = best, \underline{underline} = second-best. Coloured deltas vs.\ C1\_original.}
+\label{tab:main_mse}
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+ & aurora & mmtsflib & tats \\
+\midrule
+C1\_original & \textbf{8.5529} & 13.7948 & \underline{13.3074} \\
+C2\_empty & \textbf{8.5549} {\tiny \textcolor{red}{(+0.0\%)}} & \underline{14.1351} {\tiny \textcolor{red}{(+2.5\%)}} & 17.4402 {\tiny \textcolor{red}{(+31.1\%)}} \\
+C3\_shuffled & \textbf{8.5532} {\tiny \textcolor{red}{(+0.0\%)}} & 13.7986 {\tiny \textcolor{red}{(+0.0\%)}} & \underline{13.3078} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C4\_crossdomain & \textbf{8.5524} {\tiny \textcolor{teal}{(-0.0\%)}} & 13.7943 {\tiny \textcolor{teal}{(-0.0\%)}} & \underline{13.3078} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C5\_constant & \textbf{8.5555} {\tiny \textcolor{red}{(+0.0\%)}} & \underline{14.1375} {\tiny \textcolor{red}{(+2.5\%)}} & 17.4398 {\tiny \textcolor{red}{(+31.1\%)}} \\
+C6\_unimodal & \textbf{8.5529} {\tiny \textcolor{teal}{(0.0\%)}} & 14.0380 {\tiny \textcolor{red}{(+1.8\%)}} & \underline{14.0043} {\tiny \textcolor{red}{(+5.2\%)}} \\
+C7\_null & -- & -- & -- \\
+C8\_oracle & \textbf{8.5549} {\tiny \textcolor{red}{(+0.0\%)}} & 13.8027 {\tiny \textcolor{red}{(+0.1\%)}} & \underline{13.3075} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C9\_zero\_priors & \textbf{8.5529} {\tiny \textcolor{teal}{(0.0\%)}} & \underline{14.1319} {\tiny \textcolor{red}{(+2.4\%)}} & 17.4403 {\tiny \textcolor{red}{(+31.1\%)}} \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -442,7 +442,7 @@ def main():
 
     print('\n=== Backbone-specific condition × domain tables ===')
 
-        TARGET_BACKBONES = ["DLinear", "iTransformer", "Informer"]
+    TARGET_BACKBONES = ["DLinear", "iTransformer", "Informer"]
 
     for bb in TARGET_BACKBONES:
         tab = backbone_condition_domain_table(df_paper, bb, args.metric)

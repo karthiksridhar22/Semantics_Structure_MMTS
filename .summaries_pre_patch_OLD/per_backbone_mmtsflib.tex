@@ -1,0 +1,22 @@
+% Requires: \usepackage{booktabs, xcolor}
+\begin{table}[t]
+\caption{mmtsflib: MSE per backbone, averaged over (domain, horizon, seed). Deltas vs.\ C1\_original.}
+\label{tab:bb_mmtsflib}
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+ & DLinear & Informer & iTransformer \\
+\midrule
+C1\_original & \textbf{12.7546} & 15.0649 & \underline{13.5650} \\
+C2\_empty & \textbf{13.0520} {\tiny \textcolor{red}{(+2.3\%)}} & 15.2690 {\tiny \textcolor{red}{(+1.4\%)}} & \underline{14.0842} {\tiny \textcolor{red}{(+3.8\%)}} \\
+C3\_shuffled & \textbf{12.7553} {\tiny \textcolor{red}{(+0.0\%)}} & 15.0824 {\tiny \textcolor{red}{(+0.1\%)}} & \underline{13.5580} {\tiny \textcolor{teal}{(-0.1\%)}} \\
+C4\_crossdomain & \textbf{12.7553} {\tiny \textcolor{red}{(+0.0\%)}} & 15.0746 {\tiny \textcolor{red}{(+0.1\%)}} & \underline{13.5529} {\tiny \textcolor{teal}{(-0.1\%)}} \\
+C5\_constant & \textbf{13.0517} {\tiny \textcolor{red}{(+2.3\%)}} & 15.2757 {\tiny \textcolor{red}{(+1.4\%)}} & \underline{14.0850} {\tiny \textcolor{red}{(+3.8\%)}} \\
+C6\_unimodal & \textbf{13.0859} {\tiny \textcolor{red}{(+2.6\%)}} & 15.2659 {\tiny \textcolor{red}{(+1.3\%)}} & \underline{13.7621} {\tiny \textcolor{red}{(+1.5\%)}} \\
+C7\_null & -- & -- & -- \\
+C8\_oracle & \textbf{12.7556} {\tiny \textcolor{red}{(+0.0\%)}} & 15.0869 {\tiny \textcolor{red}{(+0.1\%)}} & \underline{13.5657} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C9\_zero\_priors & \textbf{13.0522} {\tiny \textcolor{red}{(+2.3\%)}} & 15.2632 {\tiny \textcolor{red}{(+1.3\%)}} & \underline{14.0803} {\tiny \textcolor{red}{(+3.8\%)}} \\
+\bottomrule
+\end{tabular}
+\end{table}

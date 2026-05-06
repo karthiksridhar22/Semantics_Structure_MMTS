@@ -1,0 +1,112 @@
+EVIDENCE SUMMARY
+======================================================================
+
+1) BEHAVIORAL — model MSE per condition (lower = better)
+----------------------------------------------------------------------
+  C1_original         aurora: 8.5529  mmtsflib: 13.7948  tats: 13.3074
+  C9_zero_priors      aurora: 8.5529 ( +0.0%)  mmtsflib: 14.1319 ( +2.4%)  tats: 17.4403 (+31.1%)
+  C3_shuffled         aurora: 8.5532 ( +0.0%)  mmtsflib: 13.7986 ( +0.0%)  tats: 13.3078 ( +0.0%)
+  C4_crossdomain      aurora: 8.5524 ( -0.0%)  mmtsflib: 13.7943 ( -0.0%)  tats: 13.3078 ( +0.0%)
+  C8_oracle           aurora: 8.5549 ( +0.0%)  mmtsflib: 13.8027 ( +0.1%)  tats: 13.3075 ( +0.0%)
+  C2_empty            aurora: 8.5549 ( +0.0%)  mmtsflib: 14.1351 ( +2.5%)  tats: 17.4402 (+31.1%)
+  C5_constant         aurora: 8.5555 ( +0.0%)  mmtsflib: 14.1375 ( +2.5%)  tats: 17.4398 (+31.1%)
+  C6_unimodal         aurora: 8.5529 ( +0.0%)  mmtsflib: 14.0380 ( +1.8%)  tats: 14.0043 ( +5.2%)
+
+TWO-CLUSTER VERDICT
+----------------------------------------------------------------------
+  TEXT perturbed, PRIORS kept    (C3, C4, C8): Δ ≈ 0%
+  TEXT kept, PRIORS zeroed       (C9):         large Δ on TaTS/MM-TSFlib
+  TEXT and PRIORS both off       (C2, C5):     same magnitude as C9
+  
+  Implication: text content carries ~zero predictive signal in TaTS
+  and MM-TSFlib on Time-MMD; the "multimodal" gain is the prior column.
+  Aurora ignores text entirely.
+
+2) BOOTSTRAP — 95% CIs vs C1, paired by (domain, h, seed)
+----------------------------------------------------------------------
+  aurora/default:
+    C9_zero_priors     Δ= +0.0000  CI=[+0.0000,+0.0000]  rel=  +0.0%  p=0.0001*
+    C3_shuffled        Δ= +0.0003  CI=[-0.0001,+0.0008]  rel=  +0.0%  p=0.1068 
+    C4_crossdomain     Δ= -0.0005  CI=[-0.0028,+0.0016]  rel=  -0.0%  p=0.6562 
+    C8_oracle          Δ= +0.0020  CI=[-0.0022,+0.0063]  rel=  +0.0%  p=0.3374 
+    C2_empty           Δ= +0.0020  CI=[+0.0003,+0.0041]  rel=  +0.0%  p=0.0132*
+    C5_constant        Δ= +0.0026  CI=[-0.0023,+0.0075]  rel=  +0.0%  p=0.2874 
+    C6_unimodal        Δ= +0.0000  CI=[+0.0000,+0.0000]  rel=  +0.0%  p=0.0001*
+  mmtsflib/DLinear:
+    C9_zero_priors     Δ= +0.2976  CI=[+0.2267,+0.3740]  rel=  +2.3%  p=0.0001*
+    C3_shuffled        Δ= +0.0007  CI=[+0.0002,+0.0013]  rel=  +0.0%  p=0.0008*
+    C4_crossdomain     Δ= +0.0008  CI=[+0.0003,+0.0013]  rel=  +0.0%  p=0.0001*
+    C8_oracle          Δ= +0.0010  CI=[+0.0003,+0.0019]  rel=  +0.0%  p=0.0006*
+    C2_empty           Δ= +0.2974  CI=[+0.2268,+0.3738]  rel=  +2.3%  p=0.0001*
+    C5_constant        Δ= +0.2971  CI=[+0.2265,+0.3737]  rel=  +2.3%  p=0.0001*
+    C6_unimodal        Δ= +0.3313  CI=[+0.2007,+0.4797]  rel=  +2.6%  p=0.0001*
+  mmtsflib/Informer:
+    C9_zero_priors     Δ= +0.1984  CI=[+0.1143,+0.2934]  rel=  +1.3%  p=0.0001*
+    C3_shuffled        Δ= +0.0175  CI=[+0.0014,+0.0372]  rel=  +0.1%  p=0.0310*
+    C4_crossdomain     Δ= +0.0098  CI=[-0.0092,+0.0335]  rel=  +0.1%  p=0.3848 
+    C8_oracle          Δ= +0.0221  CI=[-0.0331,+0.0755]  rel=  +0.1%  p=0.4122 
+    C2_empty           Δ= +0.2042  CI=[+0.1197,+0.3028]  rel=  +1.4%  p=0.0001*
+    C5_constant        Δ= +0.2108  CI=[+0.1261,+0.3085]  rel=  +1.4%  p=0.0001*
+    C6_unimodal        Δ= +0.2011  CI=[+0.1206,+0.2915]  rel=  +1.3%  p=0.0001*
+  mmtsflib/iTransformer:
+    C9_zero_priors     Δ= +0.5153  CI=[+0.3253,+0.7313]  rel=  +3.8%  p=0.0001*
+    C3_shuffled        Δ= -0.0070  CI=[-0.0164,+0.0017]  rel=  -0.1%  p=0.1192 
+    C4_crossdomain     Δ= -0.0121  CI=[-0.0484,+0.0122]  rel=  -0.1%  p=0.5310 
+    C8_oracle          Δ= +0.0007  CI=[-0.1168,+0.1090]  rel=  +0.0%  p=0.9666 
+    C2_empty           Δ= +0.5192  CI=[+0.3018,+0.7769]  rel=  +3.8%  p=0.0001*
+    C5_constant        Δ= +0.5200  CI=[+0.3025,+0.7779]  rel=  +3.8%  p=0.0001*
+    C6_unimodal        Δ= +0.1971  CI=[+0.1021,+0.3090]  rel=  +1.5%  p=0.0001*
+  tats/DLinear:
+    C9_zero_priors     Δ= +6.1573  CI=[+4.8434,+7.5930]  rel= +49.6%  p=0.0001*
+    C3_shuffled        Δ= +0.0000  CI=[+0.0000,+0.0000]  rel=  +0.0%  p=0.0001*
+    C4_crossdomain     Δ= -0.0000  CI=[-0.0000,+0.0000]  rel=  -0.0%  p=0.0001*
+    C8_oracle          Δ= -0.0000  CI=[-0.0000,+0.0000]  rel=  -0.0%  p=0.0001*
+    C2_empty           Δ= +6.1573  CI=[+4.8434,+7.5930]  rel= +49.6%  p=0.0001*
+    C5_constant        Δ= +6.1573  CI=[+4.8434,+7.5930]  rel= +49.6%  p=0.0001*
+    C6_unimodal        Δ= +0.7441  CI=[+0.4493,+1.0856]  rel=  +6.0%  p=0.0001*
+  tats/Informer:
+    C9_zero_priors     Δ= +1.0719  CI=[+0.6525,+1.5434]  rel=  +7.6%  p=0.0001*
+    C3_shuffled        Δ= +0.0011  CI=[+0.0002,+0.0021]  rel=  +0.0%  p=0.0068*
+    C4_crossdomain     Δ= +0.0010  CI=[-0.0001,+0.0024]  rel=  +0.0%  p=0.0644 
+    C8_oracle          Δ= +0.0004  CI=[-0.0011,+0.0019]  rel=  +0.0%  p=0.6284 
+    C2_empty           Δ= +1.0718  CI=[+0.6524,+1.5429]  rel=  +7.6%  p=0.0001*
+    C5_constant        Δ= +1.0706  CI=[+0.6517,+1.5418]  rel=  +7.5%  p=0.0001*
+    C6_unimodal        Δ= +1.1957  CI=[+0.7159,+1.7418]  rel=  +8.4%  p=0.0001*
+  tats/iTransformer:
+    C9_zero_priors     Δ= +5.1694  CI=[+3.7726,+6.6697]  rel= +38.8%  p=0.0001*
+    C3_shuffled        Δ= -0.0000  CI=[-0.0000,+0.0000]  rel=  -0.0%  p=0.6364 
+    C4_crossdomain     Δ= -0.0000  CI=[-0.0000,+0.0000]  rel=  -0.0%  p=0.6382 
+    C8_oracle          Δ= -0.0000  CI=[-0.0000,+0.0000]  rel=  -0.0%  p=0.6382 
+    C2_empty           Δ= +5.1694  CI=[+3.7726,+6.6697]  rel= +38.8%  p=0.0001*
+    C5_constant        Δ= +5.1694  CI=[+3.7726,+6.6697]  rel= +38.8%  p=0.0001*
+    C6_unimodal        Δ= +0.1507  CI=[+0.0245,+0.2982]  rel=  +1.1%  p=0.0196*
+
+3) MECHANISTIC PROBES — Aurora internals
+----------------------------------------------------------------------
+  Condition            GradNorm    H/logLk    MaxAttn     DivMSE
+  C1_original            0.1517      0.975      0.159     0.0407
+  C9_zero_priors         0.2649      0.975      0.159     0.0283
+  C3_shuffled            0.1548      0.975      0.159     0.0354
+  C4_crossdomain         0.0721      0.975      0.159     0.0351
+  C8_oracle              0.1331      0.976      0.158     0.0576
+  C2_empty               0.0744      0.975      0.159     0.0400
+  C5_constant            0.1557      0.976      0.158     0.0444
+  C6_unimodal            0.0797      0.975      0.159     0.0348
+
+  Reading these:
+   - GradNorm > 0 means text-encoder output is non-trivially used,
+     but its magnitude is similar across all conditions.
+   - H/logLk ≈ 0.97 across ALL conditions → cross-attention is
+     near-uniform over the 10 distilled text tokens. The model has
+     no content-conditional selectivity over the text features.
+   - MaxAttn ≈ 0.16 ≈ 1/L_k (where L_k=10). Confirms uniformity.
+   - DivMSE ~0.04 in standardised units. Predictions WITH text vs.
+     WITHOUT text differ slightly — but the diff has the same
+     magnitude regardless of whether text is real or perturbed,
+     suggesting a content-blind perturbation pathway, not signal use.
+
+4) MODEL vs NUMERIC-PRIOR-ONLY BASELINE
+----------------------------------------------------------------------
+  aurora     model_C1=8.5529  prior_only=9.5459  gap=-0.9930  (-10.4%)
+  mmtsflib   model_C1=13.7948  prior_only=9.5459  gap=+4.2489  (+44.5%)
+  tats       model_C1=13.3074  prior_only=9.5459  gap=+3.7615  (+39.4%)

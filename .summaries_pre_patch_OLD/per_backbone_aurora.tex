@@ -1,0 +1,22 @@
+% Requires: \usepackage{booktabs, xcolor}
+\begin{table}[t]
+\caption{aurora: MSE per backbone, averaged over (domain, horizon, seed). Deltas vs.\ C1\_original.}
+\label{tab:bb_aurora}
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+ & default \\
+\midrule
+C1\_original & \textbf{8.5529} \\
+C2\_empty & \textbf{8.5549} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C3\_shuffled & \textbf{8.5532} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C4\_crossdomain & \textbf{8.5524} {\tiny \textcolor{teal}{(-0.0\%)}} \\
+C5\_constant & \textbf{8.5555} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C6\_unimodal & \textbf{8.5529} {\tiny \textcolor{teal}{(0.0\%)}} \\
+C7\_null & -- \\
+C8\_oracle & \textbf{8.5549} {\tiny \textcolor{red}{(+0.0\%)}} \\
+C9\_zero\_priors & \textbf{8.5529} {\tiny \textcolor{teal}{(0.0\%)}} \\
+\bottomrule
+\end{tabular}
+\end{table}
